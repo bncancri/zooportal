@@ -103,27 +103,46 @@ def logout():
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
+    edit_id = request.args.get('edit_id', type=int)
+    edit_pet = None
+    if edit_id:
+        edit_pet = PetPassport.query.filter_by(id=edit_id, owner_id=current_user.id).first()
+
     if request.method == 'POST':
+        pet_id = request.form.get('pet_id', type=int)
         pet_name = request.form.get('pet_name')
         species = request.form.get('species')
         breed = request.form.get('breed')
         birth_date = request.form.get('birth_date')
+        # Если галочка стоит, сохраняем статус в текстовое поле vaccinations
+        vaccinations = 'Вакцинирован' if request.form.get('vaccinations') else None
 
         if pet_name and species:
-            new_pet = PetPassport(
-                owner_id=current_user.id, # Привязываем к текущему пользователю
-                pet_name=pet_name,
-                species=species,
-                breed=breed,
-                birth_date=birth_date
-            )
-            db.session.add(new_pet)
-            db.session.commit()
+            if pet_id:
+                # Редактирование существующего питомца текущего пользователя
+                pet = PetPassport.query.filter_by(id=pet_id, owner_id=current_user.id).first()
+                if pet:
+                    pet.pet_name = pet_name
+                    pet.species = species
+                    pet.breed = breed
+                    pet.birth_date = birth_date
+                    pet.vaccinations = vaccinations
+                    db.session.commit()
+            else:
+                # Добавление нового питомца
+                new_pet = PetPassport(
+                    owner_id=current_user.id,
+                    pet_name=pet_name,
+                    species=species,
+                    breed=breed,
+                    birth_date=birth_date,
+                    vaccinations=vaccinations
+                )
+                db.session.add(new_pet)
+                db.session.commit()
 
         return redirect(url_for('dashboard'))
 
-    # Передаем только питомцев авторизованного владельца через связь relationship
-    return render_template('dashboard.html', pets=current_user.pets)
-
+    return render_template('dashboard.html', pets=current_user.pets, edit_pet=edit_pet)
 if __name__ == '__main__':
     app.run(debug=True)

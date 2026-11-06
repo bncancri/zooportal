@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Личный кабинет — Зоопортал</title>
-  <!-- Интеграция со стилями и структурой данных проекта[cite: 1, 2] -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600&family=Manrope:wght@400;600&display=swap" rel="stylesheet">
@@ -12,10 +11,10 @@
 </head>
 <body>
 
-  <!-- Шапка сайта[cite: 1] -->
+  <!-- Шапка сайта -->
   <header class="site-header">
     <div class="container nav-wrapper">
-      <a href="index.html" class="brand">
+      <a href="{{ url_for('index') }}" class="brand">
         <svg class="line-icon" width="28" height="28" viewBox="0 0 24 24">
           <path d="M12 14c-2.5 0-4.5 1.8-4.5 4.2 0 1.5 1.2 2.3 2.6 2.3 1 0 1.9-.4 1.9-.4s.9.4 1.9.4c1.4 0 2.6-.8 2.6-2.3C16.5 15.8 14.5 14 12 14z"/>
           <circle cx="7.5" cy="10.5" r="1.5"/>
@@ -27,20 +26,20 @@
       </a>
       <nav>
         <ul class="nav-links">
-          <li><a href="index.html">Главная</a></li>
-          <li><a href="index.html#services">Услуги</a></li>
-          <li><a href="dashboard.html">Личный кабинет</a></li>
-          <li><a href="/logout" class="btn btn-outline">Выйти</a></li>
+          <li><a href="{{ url_for('index') }}">Главная</a></li>
+          <li><a href="{{ url_for('index') }}#services">Услуги</a></li>
+          <li><a href="{{ url_for('dashboard') }}">Личный кабинет</a></li>
+          <li><a href="{{ url_for('logout') }}" class="btn btn-outline">Выйти</a></li>
         </ul>
       </nav>
     </div>
   </header>
 
-  <!-- Основной контент[cite: 1, 2] -->
+  <!-- Основной контент -->
   <main class="wrapper">
     <div class="container">
 
-      <!-- Блок приветствия[cite: 1] -->
+      <!-- Блок приветствия -->
       <section class="hero">
         <div class="hero-grid">
           <div>
@@ -57,8 +56,8 @@
         </div>
       </section>
 
-      <!-- Секция с формой добавления ветпаспорта[cite: 1, 2] -->
-      <section class="directory-section">
+      <!-- Секция с формой добавления / редактирования ветпаспорта -->
+      <section class="directory-section" id="pet-form">
         <div class="directory-header">
           <div>
             <div class="section-eyebrow">
@@ -68,27 +67,31 @@
                 <line x1="12" y1="18" x2="12" y2="12"/>
                 <line x1="9" y1="15" x2="15" y2="15"/>
               </svg>
-              <span>Новая запись</span>
+              <span>{{ 'Редактирование записи' if edit_pet else 'Новая запись' }}</span>
             </div>
-            <h2>Добавить ветпаспорт</h2>
+            <h2>{{ 'Редактировать ветпаспорт' if edit_pet else 'Добавить ветпаспорт' }}</h2>
           </div>
         </div>
 
-        <form action="/dashboard" method="POST" class="contact-form">
+        <form action="{{ url_for('dashboard') }}" method="POST" class="contact-form">
+          {% if edit_pet %}
+            <input type="hidden" name="pet_id" value="{{ edit_pet.id }}">
+          {% endif %}
+
           <div class="form-row">
             <div class="field-group">
               <label for="pet_name">Имя питомца</label>
-              <input type="text" id="pet_name" name="pet_name" class="input-control" placeholder="Например, Арчи" required>
+              <input type="text" id="pet_name" name="pet_name" class="input-control" placeholder="Например, Арчи" value="{{ edit_pet.pet_name if edit_pet else '' }}" required>
             </div>
             <div class="field-group">
               <label for="species">Вид животного</label>
               <select id="species" name="species" class="input-control" required>
-                <option value="" disabled selected>Выберите вид</option>
-                <option value="Собака">Собака</option>
-                <option value="Кошка">Кошка</option>
-                <option value="Грызун">Грызун</option>
-                <option value="Птица">Птица</option>
-                <option value="Другое">Другое</option>
+                <option value="" disabled {% if not edit_pet %}selected{% endif %}>Выберите вид</option>
+                <option value="Собака" {% if edit_pet and edit_pet.species == 'Собака' %}selected{% endif %}>Собака</option>
+                <option value="Кошка" {% if edit_pet and edit_pet.species == 'Кошка' %}selected{% endif %}>Кошка</option>
+                <option value="Грызун" {% if edit_pet and edit_pet.species == 'Грызун' %}selected{% endif %}>Грызун</option>
+                <option value="Птица" {% if edit_pet and edit_pet.species == 'Птица' %}selected{% endif %}>Птица</option>
+                <option value="Другое" {% if edit_pet and edit_pet.species == 'Другое' %}selected{% endif %}>Другое</option>
               </select>
             </div>
           </div>
@@ -96,16 +99,28 @@
           <div class="form-row">
             <div class="field-group">
               <label for="breed">Порода</label>
-              <input type="text" id="breed" name="breed" class="input-control" placeholder="Например, Вельш-корги пемброк" required>
+              <input type="text" id="breed" name="breed" class="input-control" placeholder="Например, Вельш-корги пемброк" value="{{ edit_pet.breed if edit_pet else '' }}" required>
             </div>
             <div class="field-group">
               <label for="birth_date">Дата рождения</label>
-              <input type="date" id="birth_date" name="birth_date" class="input-control" required>
+              <input type="date" id="birth_date" name="birth_date" class="input-control" value="{{ edit_pet.birth_date if edit_pet else '' }}" required>
             </div>
           </div>
 
-          <div>
-            <button type="submit" class="btn">Сохранить</button>
+          <div class="form-row">
+            <div class="field-group">
+              <label for="vaccinations">
+                <input type="checkbox" id="vaccinations" name="vaccinations" value="Вакцинирован" {% if edit_pet and edit_pet.vaccinations %}checked{% endif %}>
+                Вакцинация пройдена
+              </label>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <button type="submit" class="btn">{{ 'Обновить' if edit_pet else 'Сохранить' }}</button>
+            {% if edit_pet %}
+              <a href="{{ url_for('dashboard') }}" class="btn btn-outline">Отмена</a>
+            {% endif %}
           </div>
         </form>
       </section>
@@ -150,22 +165,23 @@
             {% endif %}
 
             <div class="filter-group">
-              <a href="#" class="btn btn-outline">Редактировать</a>
+              <a href="{{ url_for('dashboard', edit_id=pet.id) }}#pet-form" class="btn btn-outline">Редактировать</a>
             </div>
           </article>
           {% endfor %}
         </div>
       </section>
       {% endif %}
+
     </div>
   </main>
 
-  <!-- Подвал сайта[cite: 1] -->
+  <!-- Подвал сайта -->
   <footer class="site-footer">
     <div class="container">
       <div class="footer-grid">
         <div class="footer-col">
-          <a href="index.html" class="footer-brand">
+          <a href="{{ url_for('index') }}" class="footer-brand">
             <svg class="line-icon" viewBox="0 0 24 24">
               <path d="M12 14c-2.5 0-4.5 1.8-4.5 4.2 0 1.5 1.2 2.3 2.6 2.3 1 0 1.9-.4 1.9-.4s.9.4 1.9.4c1.4 0 2.6-.8 2.6-2.3C16.5 15.8 14.5 14 12 14z"/>
               <circle cx="7.5" cy="10.5" r="1.5"/>
@@ -181,9 +197,9 @@
         <div class="footer-col">
           <h4>Навигация</h4>
           <ul class="footer-links">
-            <li><a href="index.html">Главная</a></li>
-            <li><a href="index.html#services">Услуги</a></li>
-            <li><a href="dashboard.html">Личный кабинет</a></li>
+            <li><a href="{{ url_for('index') }}">Главная</a></li>
+            <li><a href="{{ url_for('index') }}#services">Услуги</a></li>
+            <li><a href="{{ url_for('dashboard') }}">Личный кабинет</a></li>
           </ul>
         </div>
 

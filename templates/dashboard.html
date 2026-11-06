@@ -110,7 +110,8 @@
         </form>
       </section>
 
-      <!-- Сетка «Мои питомцы»[cite: 1, 2] -->
+      <!-- Сетка «Мои питомцы» -->
+      {% if pets %}
       <section class="directory-section">
         <div class="directory-header">
           <div>
@@ -129,30 +130,33 @@
         </div>
 
         <div class="sitter-grid">
+          {% for pet in pets %}
           <article class="sitter-card">
             <div class="sitter-meta">
               <div class="sitter-title">
-                <h3>Арчи</h3>
-                <p class="sitter-location">Собака • Вельш-корги пемброк</p>
+                <h3>{{ pet.pet_name }}</h3>
+                <p class="sitter-location">{{ pet.species }}{% if pet.breed %} • {{ pet.breed }}{% endif %}</p>
               </div>
-              <span class="tag">Паспорт №001</span>
             </div>
 
-            <p class="sitter-bio">Дата рождения: 14.05.2023. Дружелюбный, приучен к выгулу дважды в день. Аллергий на корма не выявлено.</p>
+            {% if pet.birth_date %}
+            <p class="sitter-bio">Дата рождения: {{ pet.birth_date }}</p>
+            {% endif %}
 
+            {% if pet.vaccinations %}
             <ul class="tag-list">
-              <li class="tag">Бешенство: до 05.2026</li>
-              <li class="tag">Комплексная DHPPi</li>
-              <li class="tag">Чипирован</li>
+              <li class="tag">{{ pet.vaccinations }}</li>
             </ul>
+            {% endif %}
 
             <div class="filter-group">
               <a href="#" class="btn btn-outline">Редактировать</a>
             </div>
           </article>
+          {% endfor %}
         </div>
       </section>
-
+      {% endif %}
     </div>
   </main>
 

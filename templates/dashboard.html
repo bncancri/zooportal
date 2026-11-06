@@ -116,7 +116,7 @@
             </div>
           </div>
 
-          <div class="filter-group">
+          <div class="filter-group" style="display: flex; gap: 10px;">
             <button type="submit" class="btn">{{ 'Обновить' if edit_pet else 'Сохранить' }}</button>
             {% if edit_pet %}
               <a href="{{ url_for('dashboard') }}" class="btn btn-outline">Отмена</a>
@@ -164,9 +164,15 @@
             </ul>
             {% endif %}
 
-            <div class="filter-group">
+            <div class="filter-group" style="display: flex; gap: 10px;">
               <a href="{{ url_for('dashboard', edit_id=pet.id) }}#pet-form" class="btn btn-outline">Редактировать</a>
+              
+              <!-- Форма удаления -->
+              <form action="{{ url_for('delete_pet', pet_id=pet.id) }}" method="POST" onsubmit="return confirm('Вы уверены, что хотите удалить карточку питомца?');" style="margin: 0;">
+                <button type="submit" class="btn btn-outline">Удалить</button>
+              </form>
             </div>
+            
           </article>
           {% endfor %}
         </div>

@@ -144,5 +144,17 @@ def dashboard():
         return redirect(url_for('dashboard'))
 
     return render_template('dashboard.html', pets=current_user.pets, edit_pet=edit_pet)
+
+# --- НОВЫЙ МАРШРУТ ДЛЯ УДАЛЕНИЯ ---
+@app.route('/delete_pet/<int:pet_id>', methods=['POST'])
+@login_required
+def delete_pet(pet_id):
+    # Находим питомца, строго проверяя привязку к текущему владельцу
+    pet = PetPassport.query.filter_by(id=pet_id, owner_id=current_user.id).first()
+    if pet:
+        db.session.delete(pet)
+        db.session.commit()
+    return redirect(url_for('dashboard'))
+
 if __name__ == '__main__':
     app.run(debug=True)

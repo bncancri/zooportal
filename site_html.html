@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Maison Patte — Кураторский каталог петситтеров</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;1,400&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="site_css.css">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container nav-wrapper">
+      <a href="#" class="brand">
+        <svg width="28" height="28" viewBox="0 0 24 24" class="line-icon">
+          <path d="M12 14c-2.5 0-4.5 1.8-4.5 4.2 0 1.5 1.2 2.3 2.6 2.3 1 0 1.9-.4 1.9-.4s.9.4 1.9.4c1.4 0 2.6-.8 2.6-2.3C16.5 15.8 14.5 14 12 14z"/>
+          <circle cx="7.5" cy="10.5" r="1.5"/>
+          <circle cx="10.5" cy="8" r="1.5"/>
+          <circle cx="13.5" cy="8" r="1.5"/>
+          <circle cx="16.5" cy="10.5" r="1.5"/>
+        </svg>
+        Maison Patte
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="#directory">Специалисты</a></li>
+          <li><a href="#standards">Стандарты заботы</a></li>
+          <li><a href="#contact">Консьерж</a></li>
+          <li><a href="#contact" class="btn">Подобрать ситтера</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="hero-grid">
+          <div>
+            <div class="section-eyebrow">
+              <svg width="18" height="18" viewBox="0 0 24 24" class="line-icon">
+                <path d="M3 18c2-1 4-4 5-8 1-3 3-4 5-2 1 1 2 3 4 3 2 0 3-1 4-2-1 4-3 7-6 8-3 1-7 1-12 1z"/>
+              </svg>
+              Частный уход и присмотр
+            </div>
+            <h1>Спокойная, чуткая забота о питомцах, привыкших к домашнему уюту.</h1>
+          </div>
+          <p>
+            Мы объединяем независимых проверенных петситтеров, специалистов по индивидуальным прогулкам и компаньонов с проживанием в тихих районах города.
+          </p>
+        </div>
+
+        <form class="search-bar" onsubmit="event.preventDefault();">
+          <div class="field-group">
+            <label for="location">Район или резиденция</label>
+            <input type="text" id="location" class="input-control" placeholder="напр., Нун-Лейк, Западный квартал" />
+          </div>
+          <div class="field-group">
+            <label for="service">Формат ухода</label>
+            <select id="service" class="input-control">
+              <option value="all">Все форматы ухода</option>
+              <option value="overnight">Проживание на дому</option>
+              <option value="botanical">Индивидуальные прогулки в парках</option>
+              <option value="feline">Уход за кошками и дневные визиты</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="companion">Питомец</label>
+            <select id="companion" class="input-control">
+              <option value="all">Собаки и кошки</option>
+              <option value="dog">Только собаки</option>
+              <option value="cat">Только кошки</option>
+              <option value="senior">Пожилые / Особый уход</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="dates">Желаемые даты</label>
+            <input type="text" id="dates" class="input-control" placeholder="14 ноя — 18 ноя" />
+          </div>
+          <button type="button" class="btn" onclick="filterSitters('all')">Найти ситтера</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="directory" class="directory-section">
+      <div class="container">
+        <div class="directory-header">
+          <div>
+            <div class="section-eyebrow">
+              <svg width="16" height="16" viewBox="0 0 24 24" class="line-icon">
+                <circle cx="12" cy="12" r="9"/>
+                <path d="M12 8v4l3 2"/>
+              </svg>
+              Кураторский список
+            </div>
+            <h2>Доступные специалисты</h2>
+          </div>
+          <div class="filter-group">
+            <button class="btn" onclick="filterSitters('all')">Все ситтеры (3)</button>
+            <button class="btn btn-outline" onclick="filterSitters('senior')">Возрастной и медуход</button>
+            <button class="btn btn-outline" onclick="filterSitters('empty')">Экзотические / Птицы (0)</button>
+          </div>
+        </div>
+
+        <div id="sitter-list" class="sitter-grid">
+          <article class="sitter-card" data-category="senior">
+            <div>
+              <div class="sitter-meta">
+                <div class="sitter-title">
+                  <h3>Клара Вэнс</h3>
+                  <div class="sitter-location">Нун-Лейк · 1,2 км от вас</div>
+                </div>
+                <span class="price-tag">8 500 ₽ / сутки</span>
+              </div>
+              <p class="sitter-bio">
+                Бывший ветеринарный фельдшер. Специализируется на пожилых борзых, введении инсулина по графику и спокойной домашней передержке.
+              </p>
+            </div>
+            <div>
+              <ul class="tag-list">
+                <li class="tag">Инъекции и терапия</li>
+                <li class="tag">Без других животных</li>
+                <li class="tag">Проверенные рекомендации</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="sitter-card" data-category="standard">
+            <div>
+              <div class="sitter-meta">
+                <div class="sitter-title">
+                  <h3>Юлиан Мерсер</h3>
+                  <div class="sitter-location">Кедровая роща · 2,2 км от вас</div>
+                </div>
+                <span class="price-tag">3 200 ₽ / прогулка</span>
+              </div>
+              <p class="sitter-bio">
+                Индивидуальные лесные маршруты и спокойные разгрузочные прогулки для пугливых или реактивных собак. Подробные заметки после каждого выхода.
+              </p>
+            </div>
+            <div>
+              <ul class="tag-list">
+                <li class="tag">Бережная адаптация</li>
+                <li class="tag">Индивидуальный выгул</li>
+                <li class="tag">Первая помощь</li>
+              </ul>
+            </div>
+          </article>
+
+          <article class="sitter-card" data-category="senior">
+            <div>
+              <div class="sitter-meta">
+                <div class="sitter-title">
+                  <h3>Елена Ростова</h3>
+                  <div class="sitter-location">Нун-Лейк · 3,0 км от вас</div>
+                </div>
+                <span class="price-tag">9 500 ₽ / сутки</span>
+              </div>
+              <p class="sitter-bio">
+                Специалист по поведению кошек и ситтер с проживанием в вашем доме. Строгое соблюдение ритуалов кормления, уход за садом и вечернее вычесывание.
+              </p>
+            </div>
+            <div>
+              <ul class="tag-list">
+                <li class="tag">Фелинолог</li>
+                <li class="tag">Ночное дежурство</li>
+                <li class="tag">Уход за домом</li>
+              </ul>
+            </div>
+          </article>
+        </div>
+
+        <div id="empty-state" class="empty-state">
+          <svg width="64" height="64" viewBox="0 0 64 64" class="line-icon">
+            <path d="M12 48c6-1 10-6 12-14 2-7 6-10 11-7 3 2 5 7 9 7 4 0 6-3 8-6-2 9-6 16-14 19-6 2-15 1-26 1z"/>
+            <circle cx="44" cy="20" r="2"/>
+          </svg>
+          <h3>По выбранным критериям специалистов не найдено</h3>
+          <p>В данный момент в вашем районе нет свободных ситтеров, специализирующихся на экзотических животных или птицах.</p>
+          <button class="btn" onclick="filterSitters('all')">Сбросить фильтры каталога</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="standards" class="editorial-section">
+      <div class="container">
+        <div class="section-eyebrow">
+          <svg width="16" height="16" viewBox="0 0 24 24" class="line-icon">
+            <path d="M12 2L15 8L21 9L16.5 14L18 20L12 17L6 20L7.5 14L3 9L9 8L12 2Z"/>
+          </svg>
+          Протокол Maison
+        </div>
+        <h2>Ручной отбор без автоматических алгоритмов.</h2>
+
+        <div class="editorial-grid">
+          <div class="editorial-card">
+            <svg width="28" height="28" viewBox="0 0 24 24" class="line-icon">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            </svg>
+            <h3>Трехэтапная проверка</h3>
+            <p>Каждый ситтер проходит личное собеседование, верификацию рекомендаций от ветеринарных врачей и проверку документов.</p>
+          </div>
+          <div class="editorial-card">
+            <svg width="28" height="28" viewBox="0 0 24 24" class="line-icon">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            <h3>Только одна семья за раз</h3>
+            <p>Специалисты никогда не объединяют на прогулках или передержке питомцев из разных домов, сохраняя тишину и привычный уклад.</p>
+          </div>
+          <div class="editorial-card">
+            <svg width="28" height="28" viewBox="0 0 24 24" class="line-icon">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+            <h3>Связь с ветеринарным врачом</h3>
+            <p>Каждое бронирование сопровождается медицинской картой питомца и прямой круглосуточной линией с дежурным врачом-куратором.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="contact-section">
+      <div class="container contact-grid">
+        <div class="contact-info">
+          <div class="section-eyebrow">
+            <svg width="16" height="16" viewBox="0 0 24 24" class="line-icon">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+            Служба консьержа
+          </div>
+          <h2>Индивидуальный подбор и личные консультации</h2>
+          <p>
+            Требуется ситтер для длительного проживания в загородном доме, послеоперационный уход или предварительное знакомство? Свяжитесь с нашей студией напрямую.
+          </p>
+
+          <div class="contact-details">
+            <div class="detail-item">
+              <span>Адрес студии</span>
+              <strong>Терраса Нун-Лейк, 412, павильон B</strong>
+            </div>
+            <div class="detail-item">
+              <span>Прямая линия консьержа</span>
+              <strong>hello@maisonpatte.com · +7 (495) 019-28-34</strong>
+            </div>
+            <div class="detail-item">
+              <span>Часы консультаций</span>
+              <strong>Понедельник — Суббота, с 08:00 до 19:00</strong>
+            </div>
+          </div>
+        </div>
+
+        <form class="contact-form" onsubmit="event.preventDefault();">
+          <div class="form-row">
+            <div class="field-group">
+              <label for="name">Ваше имя</label>
+              <input type="text" id="name" class="input-control" placeholder="напр., Артур Пендлтон" required />
+            </div>
+            <div class="field-group">
+              <label for="email">Электронная почта</label>
+              <input type="email" id="email" class="input-control" placeholder="arthur@domain.com" required />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field-group">
+              <label for="pet-profile">Имя, порода и возраст питомца</label>
+              <input type="text" id="pet-profile" class="input-control" placeholder="напр., Барнаби, уиппет, 9 лет" />
+            </div>
+            <div class="field-group">
+              <label for="district">Район или загородная резиденция</label>
+              <input type="text" id="district" class="input-control" placeholder="Северный Нун-Лейк" />
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label for="notes">Привычный распорядок и особенности</label>
+            <textarea id="notes" class="input-control" placeholder="Опишите время прогулок, график приема лекарств и пожелания по уходу за домом..."></textarea>
+          </div>
+
+          <div>
+            <button type="submit" class="btn">Отправить анкету</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="footer-brand">
+            <svg viewBox="0 0 24 24" class="line-icon">
+              <path d="M12 14c-2.5 0-4.5 1.8-4.5 4.2 0 1.5 1.2 2.3 2.6 2.3 1 0 1.9-.4 1.9-.4s.9.4 1.9.4c1.4 0 2.6-.8 2.6-2.3C16.5 15.8 14.5 14 12 14z"/>
+              <circle cx="7.5" cy="10.5" r="1.5"/>
+              <circle cx="10.5" cy="8" r="1.5"/>
+              <circle cx="13.5" cy="8" r="1.5"/>
+              <circle cx="16.5" cy="10.5" r="1.5"/>
+            </svg>
+            Maison Patte
+          </div>
+          <p>Бережный присмотр за питомцами в домашней атмосфере. Ручной отбор специалистов для вашего спокойствия.</p>
+        </div>
+        
+        <div class="footer-col">
+          <h4>Навигация</h4>
+          <ul class="footer-links">
+            <li><a href="#directory">Специалисты</a></li>
+            <li><a href="#standards">Протокол заботы</a></li>
+            <li><a href="#contact">Служба консьержа</a></li>
+            <li><a href="#">Стать ситтером</a></li>
+          </ul>
+        </div>
+        
+        <div class="footer-col">
+          <h4>Контакты</h4>
+          <ul class="footer-links">
+            <li><a href="mailto:hello@maisonpatte.com">hello@maisonpatte.com</a></li>
+            <li><a href="tel:+74950192834">+7 (495) 019-28-34</a></li>
+            <li>Терраса Нун-Лейк, 412, павильон B</li>
+            <li>Ежедневно с 08:00 до 19:00</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="footer-bottom">
+        <span>© 2026 Каталог Maison Patte. Все права защищены.</span>
+        <div class="footer-legal">
+          <a href="#">Политика конфиденциальности</a>
+          <a href="#">Условия использования</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function filterSitters(category) {
+      const cards = document.querySelectorAll('.sitter-card');
+      const grid = document.getElementById('sitter-list');
+      const empty = document.getElementById('empty-state');
+
+      if (category === 'empty') {
+        grid.style.display = 'none';
+        empty.style.display = 'block';
+        return;
+      }
+
+      grid.style.display = 'grid';
+      empty.style.display = 'none';
+
+      cards.forEach(card => {
+        if (category === 'all' || card.dataset.category === category) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

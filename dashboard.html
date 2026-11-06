@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Личный кабинет — Maison Patte</title>
+  <!-- Интеграция со стилями и структурой данных проекта[cite: 1, 2] -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600&family=Manrope:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="site_css.css">
+</head>
+<body>
+
+  <!-- Шапка сайта[cite: 1] -->
+  <header class="site-header">
+    <div class="container nav-wrapper">
+      <a href="index.html" class="brand">
+        <svg class="line-icon" width="28" height="28" viewBox="0 0 24 24">
+          <path d="M12 14c-2.5 0-4.5 1.8-4.5 4.2 0 1.5 1.2 2.3 2.6 2.3 1 0 1.9-.4 1.9-.4s.9.4 1.9.4c1.4 0 2.6-.8 2.6-2.3C16.5 15.8 14.5 14 12 14z"/>
+          <circle cx="7.5" cy="10.5" r="1.5"/>
+          <circle cx="10.5" cy="8" r="1.5"/>
+          <circle cx="13.5" cy="8" r="1.5"/>
+          <circle cx="16.5" cy="10.5" r="1.5"/>
+        </svg>
+        Maison Patte
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html">Главная</a></li>
+          <li><a href="index.html#services">Услуги</a></li>
+          <li><a href="dashboard.html">Личный кабинет</a></li>
+          <li><a href="/logout" class="btn btn-outline">Выйти</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Основной контент[cite: 1, 2] -->
+  <main class="wrapper">
+    <div class="container">
+
+      <!-- Блок приветствия[cite: 1] -->
+      <section class="hero">
+        <div class="hero-grid">
+          <div>
+            <div class="section-eyebrow">
+              <svg class="line-icon" width="18" height="18" viewBox="0 0 24 24">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <span>Профиль владельца</span>
+            </div>
+            <h1>Добро пожаловать в личный кабинет!</h1>
+            <p>Храните ветеринарные паспорта ваших питомцев в одном месте, отслеживайте график вакцинации и делитесь актуальной анкетой с выбранным ситтером перед бронированием.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Секция с формой добавления ветпаспорта[cite: 1, 2] -->
+      <section class="directory-section">
+        <div class="directory-header">
+          <div>
+            <div class="section-eyebrow">
+              <svg class="line-icon" width="18" height="18" viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="12" y1="18" x2="12" y2="12"/>
+                <line x1="9" y1="15" x2="15" y2="15"/>
+              </svg>
+              <span>Новая запись</span>
+            </div>
+            <h2>Добавить ветпаспорт</h2>
+          </div>
+        </div>
+
+        <form action="/add_pet" method="POST" class="contact-form">
+          <div class="form-row">
+            <div class="field-group">
+              <label for="pet_name">Имя питомца</label>
+              <input type="text" id="pet_name" name="pet_name" class="input-control" placeholder="Например, Арчи" required>
+            </div>
+            <div class="field-group">
+              <label for="species">Вид животного</label>
+              <select id="species" name="species" class="input-control" required>
+                <option value="" disabled selected>Выберите вид</option>
+                <option value="Собака">Собака</option>
+                <option value="Кошка">Кошка</option>
+                <option value="Грызун">Грызун</option>
+                <option value="Птица">Птица</option>
+                <option value="Другое">Другое</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field-group">
+              <label for="breed">Порода</label>
+              <input type="text" id="breed" name="breed" class="input-control" placeholder="Например, Вельш-корги пемброк" required>
+            </div>
+            <div class="field-group">
+              <label for="birth_date">Дата рождения</label>
+              <input type="date" id="birth_date" name="birth_date" class="input-control" required>
+            </div>
+          </div>
+
+          <div>
+            <button type="submit" class="btn">Сохранить</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Сетка «Мои питомцы»[cite: 1, 2] -->
+      <section class="directory-section">
+        <div class="directory-header">
+          <div>
+            <div class="section-eyebrow">
+              <svg class="line-icon" width="18" height="18" viewBox="0 0 24 24">
+                <path d="M12 14c-2.5 0-4.5 1.8-4.5 4.2 0 1.5 1.2 2.3 2.6 2.3 1 0 1.9-.4 1.9-.4s.9.4 1.9.4c1.4 0 2.6-.8 2.6-2.3C16.5 15.8 14.5 14 12 14z"/>
+                <circle cx="7.5" cy="10.5" r="1.5"/>
+                <circle cx="10.5" cy="8" r="1.5"/>
+                <circle cx="13.5" cy="8" r="1.5"/>
+                <circle cx="16.5" cy="10.5" r="1.5"/>
+              </svg>
+              <span>Ветеринарные карточки</span>
+            </div>
+            <h2>Мои питомцы</h2>
+          </div>
+        </div>
+
+        <div class="sitter-grid">
+          <article class="sitter-card">
+            <div class="sitter-meta">
+              <div class="sitter-title">
+                <h3>Арчи</h3>
+                <p class="sitter-location">Собака • Вельш-корги пемброк</p>
+              </div>
+              <span class="tag">Паспорт №001</span>
+            </div>
+
+            <p class="sitter-bio">Дата рождения: 14.05.2023. Дружелюбный, приучен к выгулу дважды в день. Аллергий на корма не выявлено.</p>
+
+            <ul class="tag-list">
+              <li class="tag">Бешенство: до 05.2026</li>
+              <li class="tag">Комплексная DHPPi</li>
+              <li class="tag">Чипирован</li>
+            </ul>
+
+            <div class="filter-group">
+              <a href="#" class="btn btn-outline">Редактировать</a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Подвал сайта[cite: 1] -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <a href="index.html" class="footer-brand">
+            <svg class="line-icon" viewBox="0 0 24 24">
+              <path d="M12 14c-2.5 0-4.5 1.8-4.5 4.2 0 1.5 1.2 2.3 2.6 2.3 1 0 1.9-.4 1.9-.4s.9.4 1.9.4c1.4 0 2.6-.8 2.6-2.3C16.5 15.8 14.5 14 12 14z"/>
+              <circle cx="7.5" cy="10.5" r="1.5"/>
+              <circle cx="10.5" cy="8" r="1.5"/>
+              <circle cx="13.5" cy="8" r="1.5"/>
+              <circle cx="16.5" cy="10.5" r="1.5"/>
+            </svg>
+            Maison Patte
+          </a>
+          <p>Сервис подбора проверенных сиделок и бережного ухода за домашними животными.</p>
+        </div>
+
+        <div class="footer-col">
+          <h4>Навигация</h4>
+          <ul class="footer-links">
+            <li><a href="index.html">Главная</a></li>
+            <li><a href="index.html#services">Услуги</a></li>
+            <li><a href="dashboard.html">Личный кабинет</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Поддержка</h4>
+          <ul class="footer-links">
+            <li>Ежедневно с 09:00 до 21:00</li>
+            <li><a href="mailto:care@maisonpatte.ru">care@maisonpatte.ru</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>© 2026 Maison Patte. Все права защищены.</span>
+        <div class="footer-legal">
+          <a href="#">Политика конфиденциальности</a>
+          <a href="#">Условия использования</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

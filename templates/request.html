@@ -125,27 +125,35 @@
 
       {% if kind == 'care' %}
         <div class="field-group">
-          <label for="pet_id">Питомец</label>
-          {% if current_user.is_authenticated and pets %}
+          <label for="pet_info">Питомец: имя, порода и возраст</label>
+          <input type="text" id="pet_info" name="pet_info" class="input-control" placeholder="Например, Барнаби, уиппет, 9 лет" {% if not (current_user.is_authenticated and pets) %}required {% endif %}value="{{ form.get('pet_info', '') }}">
+          <p class="form-hint">
+            {% if current_user.is_authenticated %}
+              Без выбранного ветпаспорта это описание обязательно. Если выберете карточку ниже, к заявке приложится её снимок.
+            {% else %}
+              <a href="{{ url_for('login', next=request.path + ('?' + request.query_string.decode() if request.query_string else '')) }}">Войдите в аккаунт</a>, чтобы приложить ветпаспорт. Без аккаунта достаточно этого описания.
+            {% endif %}
+          </p>
+        </div>
+
+        {% if current_user.is_authenticated and pets %}
+          <div class="field-group">
+            <label for="pet_id">Ветпаспорт из кабинета</label>
             <select id="pet_id" name="pet_id" class="input-control">
-              <option value="">Не указывать в заявке</option>
+              <option value="">Не прикладывать</option>
               {% for pet in pets %}
                 <option value="{{ pet.id }}" {% if form.get('pet_id') == pet.id|string %}selected{% endif %}>
                   {{ pet.pet_name }}{% if pet.breed %} · {{ pet.breed }}{% endif %}
                 </option>
               {% endfor %}
             </select>
-            <p class="form-hint">Ситтер получит ветпаспорт выбранного питомца вместе с заявкой.</p>
-          {% elif current_user.is_authenticated %}
-            <p class="form-hint">
-              В ветпаспорте пока нет питомцев. <a href="{{ url_for('dashboard') }}#pet-form">Добавьте карточку</a> — ситтер получит её до первого визита.
-            </p>
-          {% else %}
-            <p class="form-hint">
-              <a href="{{ url_for('login', next=request.path + ('?' + request.query_string.decode() if request.query_string else '')) }}">Войдите в аккаунт</a>, чтобы приложить к заявке ветпаспорт питомца.
-            </p>
-          {% endif %}
-        </div>
+            <p class="form-hint">Ситтер получит карточку выбранного питомца до первого визита.</p>
+          </div>
+        {% elif current_user.is_authenticated %}
+          <p class="form-hint">
+            В ветпаспорте пока нет питомцев. <a href="{{ url_for('dashboard') }}#pet-form">Добавьте карточку</a> — ситтер получит её до первого визита.
+          </p>
+        {% endif %}
       {% elif kind == 'concierge' %}
         <div class="field-group">
           <label for="pet_info">Питомец: имя, порода и возраст</label>

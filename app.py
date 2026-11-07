@@ -32,7 +32,7 @@ REQUEST_KINDS = {
     'care': {
         'eyebrow': 'Запрос ухода',
         'title': 'Заявка на уход',
-        'lead': 'Вы выбрали специалиста. Оставьте контакты — консьерж подтвердит даты, а ситтер получит ветпаспорт питомца до первого визита.',
+        'lead': 'Вы выбрали специалиста. Оставьте контакты и опишите питомца — консьерж подтвердит даты. Если вы вошли в аккаунт, приложите ветпаспорт: ситтер увидит его до первого визита.',
         'submit': 'Отправить запрос',
     },
     'sitter': {
@@ -95,7 +95,7 @@ class Request(db.Model):
     email = db.Column(db.String(120), nullable=False, index=True)
     phone = db.Column(db.String(40))
     district = db.Column(db.String(120))
-    pet_info = db.Column(db.String(200))
+    pet_info = db.Column(db.String(200))  # описание гостя или снимок ветпаспорта на момент заявки
     message = db.Column(db.Text)
 
     author = db.relationship('User', backref='requests')
@@ -366,7 +366,8 @@ def request_submit():
     email = (request.form.get('email') or '').strip().lower()
     phone = (request.form.get('phone') or '').strip() or None
     district = (request.form.get('district') or '').strip() or None
-    pet_info = (request.form.get('pet_info') or '').strip() or None
+    # Ограничиваем строку под размер колонки pet_info
+    pet_info = (request.form.get('pet_info') or '').strip()[:200] or None
     message = (request.form.get('message') or '').strip() or None
 
     # Питомца берём только из своего аккаунта — чужие id игнорируем
@@ -374,8 +375,16 @@ def request_submit():
     pet_id = request.form.get('pet_id', type=int)
     if pet_id and current_user.is_authenticated:
         pet = PetPassport.query.filter_by(id=pet_id, owner_id=current_user.id).first()
-    if pet and not pet_info:
-        pet_info = f'{pet.pet_name}, {pet.species}'
+
+    if pet:
+        # Снимок ветпаспорта на момент заявки: карточку потом могут изменить или удалить,
+        # а заявка должна оставаться самодостаточной для консьержа и ситтера.
+        parts = [pet.pet_name, pet.species, pet.breed, pet_age_filter(pet.birth_date)]
+        if pet.vaccinations:
+            parts.append(pet.vaccinations)
+        snapshot = ', '.join(str(part) for part in parts if part)
+        pet_info = f'{snapshot} · {pet_info}' if pet_info else snapshot
+        pet_info = pet_info[:200]
 
     error = None
     if not name:
@@ -384,6 +393,8 @@ def request_submit():
         error = 'Укажите корректный email — на него придёт ответ.'
     elif kind == 'care' and sitter is None:
         error = 'Специалист не найден. Выберите его в каталоге заново.'
+    elif kind == 'care' and not pet and not pet_info:
+        error = 'Опишите питомца — консьерж не сможет подтвердить уход без этих данных.'
     elif kind == 'sitter' and not district:
         error = 'Укажите район, в котором вам удобно работать.'
 
@@ -415,12 +426,16 @@ def request_submit():
 
     # Редирект без якоря: подтверждение (flash) должно быть на виду сразу
     if kind == 'care':
+        if current_user.is_authenticated:
+            flash(
+                f'Заявка отправлена: {new_request.sitter_name}. Консьерж подтвердит даты и свяжется с вами на {email}.',
+                'success',
+            )
+            return redirect(url_for('dashboard'))
         flash(
-            f'Заявка отправлена: {new_request.sitter_name}. Консьерж свяжется с вами на {email}.',
+            f'Заявка отправлена: {new_request.sitter_name}. Консьерж уточнит данные питомца и свяжется с вами на {email}.',
             'success',
         )
-        if current_user.is_authenticated:
-            return redirect(url_for('dashboard'))
         return redirect(url_for('index'))
 
     if kind == 'sitter':

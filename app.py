@@ -84,7 +84,7 @@ class Request(db.Model):
 
     # Связь с аккаунтом и ветпаспортом (у гостя может быть пусто)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True, index=True)
-    pet_id = db.Column(db.Integer, db.ForeignKey('pet_passport.id'), nullable=True)
+    pet_id = db.Column(db.Integer, db.ForeignKey('pet_passport.id'), nullable=True)  # ветпаспорт: care / concierge
 
     # Если запрос адресован конкретному специалисту из каталога
     sitter_slug = db.Column(db.String(80), nullable=True)
@@ -138,6 +138,33 @@ def _user_pets():
     return PetPassport.query.filter_by(owner_id=current_user.id).order_by(PetPassport.id.desc()).all()
 
 
+def _request_defaults(kind):
+    """Подсказки для формы заявки из аккаунта и последнего обращения того же типа.
+
+    Возвращает обычные значения для полей: пользователь может исправить любое из них руками.
+    Ищем именно тот же kind, иначе район работы из анкеты sitter подставился бы клиенту.
+    """
+    if not current_user.is_authenticated:
+        return {}
+
+    defaults = {'email': current_user.email}
+    last = (
+        Request.query
+        .filter_by(user_id=current_user.id, kind=kind)
+        .order_by(Request.created_at.desc(), Request.id.desc())
+        .first()
+    )
+    if last:
+        for field in ('name', 'phone', 'district'):
+            value = getattr(last, field)
+            if value:
+                defaults[field] = value
+        # Подставляем питомца, только если карточка ещё принадлежит этому пользователю
+        if last.pet_id and PetPassport.query.filter_by(id=last.pet_id, owner_id=current_user.id).first():
+            defaults['pet_id'] = str(last.pet_id)
+    return defaults
+
+
 @app.template_filter('pet_age')
 def pet_age_filter(birth_date):
     """Возвращает возраст питомца строкой: '2 года 4 мес.'"""
@@ -183,6 +210,8 @@ def index():
         sitters=SITTERS,
         hero_pet=pets[0] if pets else None,
         pets_count=len(pets),
+        pets=pets,
+        form=_request_defaults('concierge'),
     )
 
 
@@ -350,7 +379,7 @@ def request_form(kind):
         sitter=sitter,
         pets=_user_pets(),
         error=None,
-        form={},
+        form=_request_defaults(kind),
     )
 
 
@@ -370,10 +399,10 @@ def request_submit():
     pet_info = (request.form.get('pet_info') or '').strip()[:200] or None
     message = (request.form.get('message') or '').strip() or None
 
-    # Питомца берём только из своего аккаунта — чужие id игнорируем
+    # Ветпаспорт прикладываем только к уходу и консьержу; чужие id игнорируем
     pet = None
     pet_id = request.form.get('pet_id', type=int)
-    if pet_id and current_user.is_authenticated:
+    if pet_id and current_user.is_authenticated and kind in ('care', 'concierge'):
         pet = PetPassport.query.filter_by(id=pet_id, owner_id=current_user.id).first()
 
     if pet:

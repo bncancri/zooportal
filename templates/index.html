@@ -309,28 +309,52 @@
       <div class="form-row">
         <div class="field-group">
           <label for="name">Ваше имя</label>
-          <input type="text" id="name" name="name" class="input-control" placeholder="Например, Артур Пендлтон" required />
+          <input type="text" id="name" name="name" class="input-control" placeholder="Например, Артур Пендлтон" value="{{ form.get('name', '') }}" required />
         </div>
         <div class="field-group">
           <label for="email">Электронная почта</label>
-          <input type="email" id="email" name="email" class="input-control" placeholder="arthur@domain.com" required />
+          <input type="email" id="email" name="email" class="input-control" placeholder="arthur@domain.com" value="{{ form.get('email', '') }}" required />
         </div>
       </div>
 
       <div class="form-row">
         <div class="field-group">
-          <label for="pet_info">Имя, порода и возраст питомца</label>
-          <input type="text" id="pet_info" name="pet_info" class="input-control" placeholder="Например, Барнаби, уиппет, 9 лет" />
+          <label for="phone">Телефон</label>
+          <input type="tel" id="phone" name="phone" class="input-control" placeholder="+7 (___) ___-__-__" value="{{ form.get('phone', '') }}" />
         </div>
         <div class="field-group">
           <label for="district">Район или загородная резиденция</label>
-          <input type="text" id="district" name="district" class="input-control" placeholder="Хамовники" />
+          <input type="text" id="district" name="district" class="input-control" placeholder="Хамовники" value="{{ form.get('district', '') }}" />
         </div>
       </div>
 
       <div class="field-group">
+        <label for="pet_info">Имя, порода и возраст питомца</label>
+        <input type="text" id="pet_info" name="pet_info" class="input-control" placeholder="Например, Барнаби, уиппет, 9 лет" value="{{ form.get('pet_info', '') }}" />
+      </div>
+
+      {% if current_user.is_authenticated and pets %}
+        <div class="field-group">
+          <label for="pet_id">Ветпаспорт из кабинета</label>
+          <select id="pet_id" name="pet_id" class="input-control">
+            <option value="">Не прикладывать</option>
+            {% for pet in pets %}
+              <option value="{{ pet.id }}" {% if form.get('pet_id') == pet.id|string %}selected{% endif %}>
+                {{ pet.pet_name }}{% if pet.breed %} · {{ pet.breed }}{% endif %}
+              </option>
+            {% endfor %}
+          </select>
+          <p class="form-hint">Консьерж получит карточку питомца вместе с заявкой. Все поля можно изменить перед отправкой.</p>
+        </div>
+      {% elif current_user.is_authenticated %}
+        <p class="form-hint">В ветпаспорте пока нет питомцев. <a href="{{ url_for('dashboard') }}#pet-form">Добавьте карточку</a> — консьерж учтёт её данные при подборе.</p>
+      {% else %}
+        <p class="form-hint"><a href="{{ url_for('login', next=request.path + '#contact') }}">Войдите в аккаунт</a>, чтобы приложить к заявке ветпаспорт и подтянуть контакты.</p>
+      {% endif %}
+
+      <div class="field-group">
         <label for="message">Задача и особенности ухода</label>
-        <textarea id="message" name="message" class="input-control" placeholder="Опишите формат ухода, график приёма лекарств и пожелания по дому..."></textarea>
+        <textarea id="message" name="message" class="input-control" placeholder="Опишите формат ухода, график приёма лекарств и пожелания по дому...">{{ form.get('message', '') }}</textarea>
       </div>
 
       <div>

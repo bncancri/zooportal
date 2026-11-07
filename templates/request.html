@@ -158,7 +158,31 @@
         <div class="field-group">
           <label for="pet_info">Питомец: имя, порода и возраст</label>
           <input type="text" id="pet_info" name="pet_info" class="input-control" placeholder="Например, Барнаби, уиппет, 9 лет" value="{{ form.get('pet_info', '') }}">
+          <p class="form-hint">Можно описать питомца текстом, приложить ветпаспорт из кабинета или и то, и другое.</p>
         </div>
+
+        {% if current_user.is_authenticated and pets %}
+          <div class="field-group">
+            <label for="pet_id">Ветпаспорт из кабинета</label>
+            <select id="pet_id" name="pet_id" class="input-control">
+              <option value="">Не прикладывать</option>
+              {% for pet in pets %}
+                <option value="{{ pet.id }}" {% if form.get('pet_id') == pet.id|string %}selected{% endif %}>
+                  {{ pet.pet_name }}{% if pet.breed %} · {{ pet.breed }}{% endif %}
+                </option>
+              {% endfor %}
+            </select>
+            <p class="form-hint">Консьерж получит карточку питомца вместе с заявкой.</p>
+          </div>
+        {% elif current_user.is_authenticated %}
+          <p class="form-hint">
+            В ветпаспорте пока нет питомцев. <a href="{{ url_for('dashboard') }}#pet-form">Добавьте карточку</a> — консьерж учтёт её данные при подборе.
+          </p>
+        {% else %}
+          <p class="form-hint">
+            <a href="{{ url_for('login', next=request.path) }}">Войдите в аккаунт</a>, чтобы приложить к заявке ветпаспорт питомца.
+          </p>
+        {% endif %}
       {% endif %}
 
       <div class="field-group">

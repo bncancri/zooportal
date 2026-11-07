@@ -1,33 +1,39 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Вход — Зоопортал</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='site_css.css') }}">
-</head>
-<body>
-    <div class="wrapper">
-        <div class="card">
-            <h2>Вход в личный кабинет</h2>
+{% extends 'base.html' %}
 
-            {% if error %}
-                <p>{{ error }}</p>
-            {% endif %}
+{% block title %}Вход — Зоопортал{% endblock %}
 
-            <form method="POST" action="{{ url_for('login') }}">
-                <div>
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" required>
-                </div>
-                <div>
-                    <label for="password">Пароль:</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-                <button type="submit" class="btn">Войти</button>
-            </form>
+{% block content %}
+<section class="auth-section">
+  <div class="container">
+    <div class="auth-card">
+      <div class="section-eyebrow">
+        <svg width="16" height="16" viewBox="0 0 24 24" class="line-icon">
+          <rect x="3" y="11" width="18" height="11" rx="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        Вход в аккаунт
+      </div>
+      <h1>Личный кабинет</h1>
+      <p class="auth-lead">Войдите, чтобы открыть ветпаспорта питомцев и передать анкету ситтеру.</p>
 
-            <p>Нет аккаунта? <a href="{{ url_for('register') }}">Создать аккаунт</a></p>
+      {% if error %}
+        <p class="flash flash-error">{{ error }}</p>
+      {% endif %}
+
+      <form method="POST" action="{{ url_for('login') }}" class="auth-form">
+        <div class="field-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" class="input-control" placeholder="you@example.com" required>
         </div>
+        <div class="field-group">
+          <label for="password">Пароль</label>
+          <input type="password" id="password" name="password" class="input-control" placeholder="Ваш пароль" required>
+        </div>
+        <button type="submit" class="btn btn-block">Войти</button>
+      </form>
+
+      <p class="auth-switch">Нет аккаунта? <a href="{{ url_for('register') }}">Создать аккаунт</a></p>
     </div>
-</body>
-</html>
+  </div>
+</section>
+{% endblock %}

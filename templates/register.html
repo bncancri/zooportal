@@ -1,33 +1,45 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Регистрация — Зоопортал</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='site_css.css') }}">
-</head>
-<body>
-    <div class="wrapper">
-        <div class="card">
-            <h2>Регистрация</h2>
-            
-            {% if error %}
-                <p>{{ error }}</p>
-            {% endif %}
+{% extends 'base.html' %}
 
-            <form method="POST" action="{{ url_for('register') }}">
-                <div>
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" required>
-                </div>
-                <div>
-                    <label for="password">Пароль:</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-                <button type="submit" class="btn">Зарегистрироваться</button>
-            </form>
+{% block title %}Регистрация — Зоопортал{% endblock %}
 
-            <p>Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти</a></p>
+{% block content %}
+<section class="auth-section">
+  <div class="container">
+    <div class="auth-card">
+      <div class="section-eyebrow">
+        <svg width="16" height="16" viewBox="0 0 24 24" class="line-icon">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <line x1="19" y1="8" x2="19" y2="14"/>
+          <line x1="16" y1="11" x2="22" y2="11"/>
+        </svg>
+        Новый аккаунт
+      </div>
+      <h1>Создать аккаунт</h1>
+      <p class="auth-lead">Аккаунт нужен, чтобы хранить ветпаспорта питомцев и передавать их ситтеру.</p>
+
+      {% if error %}
+        <p class="flash flash-error">{{ error }}</p>
+      {% endif %}
+
+      <form method="POST" action="{{ url_for('register') }}" class="auth-form">
+        <div class="field-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" class="input-control" placeholder="you@example.com" required>
         </div>
+        <div class="field-group">
+          <label for="password">Пароль</label>
+          <input type="password" id="password" name="password" class="input-control" placeholder="Не менее 8 символов" minlength="8" required>
+        </div>
+        <div class="field-group">
+          <label for="password_confirm">Повторите пароль</label>
+          <input type="password" id="password_confirm" name="password_confirm" class="input-control" placeholder="Ещё раз" minlength="8" required>
+        </div>
+        <button type="submit" class="btn btn-block">Зарегистрироваться</button>
+      </form>
+
+      <p class="auth-switch">Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти</a></p>
     </div>
-</body>
-</html>
+  </div>
+</section>
+{% endblock %}

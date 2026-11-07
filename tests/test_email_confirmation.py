@@ -1,7 +1,11 @@
 """Тесты подтверждения email: формат, жёсткая блокировка, ссылки, повторная отправка."""
 import os
+import socketserver
 import tempfile
+import threading
 from datetime import datetime, timedelta
+from email import policy
+from email.parser import BytesParser
 
 # Настройки задаём до импорта приложения: тесты не трогают рабочую БД из instance/.
 os.environ['DATABASE_URL'] = 'sqlite:///' + os.path.join(
@@ -12,6 +16,7 @@ os.environ['EMAIL_DEV_MODE'] = '1'
 import pytest
 from sqlalchemy import inspect, text
 
+import mailer
 import app as app_module
 from app import (
     app, db, User, Request, CONFIRM_RESEND_COOLDOWN, _is_valid_email
@@ -249,3 +254,97 @@ def test_dev_link_is_relative_and_base_url_is_used_in_mail(client, monkeypatch):
     assert path.startswith('/confirm-email/')  # работает за любым прокси
     assert client.get(path).status_code == 302
     assert sent_links[0].startswith('https://zooportal.example/confirm-email/')
+
+
+class _SMTPHandler(socketserver.StreamRequestHandler):
+    """Минимальный SMTP-сервер: перехватывает письмо без внешней сети."""
+
+    def reply(self, payload):
+        self.wfile.write(payload)
+        self.wfile.flush()
+
+    def handle(self):
+        captured = self.server.captured
+        self.reply(b'220 localhost ESMTP\r\n')
+        in_data = False
+        lines = []
+        while True:
+            raw = self.rfile.readline()
+            if not raw:
+                return
+            line = raw.decode('utf-8', 'replace').rstrip('\r\n')
+            if in_data:
+                if line == '.':
+                    captured['data'] = '\r\n'.join(lines)
+                    self.reply(b'250 OK\r\n')
+                    in_data = False
+                else:
+                    lines.append(line)
+                continue
+
+            upper = line.upper()
+            if upper.startswith(('EHLO', 'HELO')):
+                self.reply(b'250-localhost\r\n250 HELP\r\n')
+            elif upper.startswith('MAIL FROM'):
+                captured['from'] = line
+                self.reply(b'250 OK\r\n')
+            elif upper.startswith('RCPT TO'):
+                captured['to'] = line
+                self.reply(b'250 OK\r\n')
+            elif upper == 'DATA':
+                self.reply(b'354 End data with <CR><LF>.<CR><LF>\r\n')
+                in_data = True
+                lines = []
+            elif upper == 'QUIT':
+                self.reply(b'221 Bye\r\n')
+                return
+            else:
+                self.reply(b'250 OK\r\n')
+
+
+class _SMTPServer(socketserver.ThreadingTCPServer):
+    allow_reuse_address = True
+    daemon_threads = True
+
+    def __init__(self, captured):
+        super().__init__(('127.0.0.1', 0), _SMTPHandler)
+        self.captured = captured
+
+
+def test_real_smtp_sends_letter_and_link_works(client, monkeypatch):
+    """Боевой путь: письмо уходит через SMTP, dev-блока нет, ссылка подтверждает."""
+    captured = {}
+    server = _SMTPServer(captured)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    monkeypatch.setattr(app_module, 'EMAIL_DEV_MODE', False)
+    monkeypatch.setattr(app_module, 'APP_BASE_URL', 'https://zooportal.example')
+    monkeypatch.setattr(mailer, 'SMTP_HOST', '127.0.0.1')
+    monkeypatch.setattr(mailer, 'SMTP_PORT', server.server_address[1])
+    monkeypatch.setattr(mailer, 'SMTP_SECURITY', 'none')
+    monkeypatch.setattr(mailer, 'SMTP_FROM', 'no-reply@zooportal.ru')
+    monkeypatch.setattr(mailer, 'SMTP_USER', None)
+    monkeypatch.setattr(mailer, 'SMTP_PASSWORD', None)
+    monkeypatch.setattr(mailer, 'SMTP_TIMEOUT', 5)
+    try:
+        assert register(client).status_code == 302
+        assert dev_link(client) is None  # в проде ссылку на экран не кладём
+        assert 'Режим разработки' not in client.get('/confirm-email').get_data(as_text=True)
+
+        message = BytesParser(policy=policy.default).parsebytes(
+            captured['data'].encode('utf-8')
+        )
+        assert message['To'] == EMAIL
+        assert 'Подтвердите email' in str(message['Subject'])
+        body = message.get_content()
+        assert 'https://zooportal.example/confirm-email/' in body
+
+        token = body.split('https://zooportal.example/confirm-email/', 1)[1].split()[0]
+        assert client.get(f'/confirm-email/{token}').status_code == 302
+        with app.app_context():
+            assert User.query.filter_by(email=EMAIL).first().email_confirmed is True
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)

@@ -1,10 +1,7 @@
 import logging
 import os
 import re
-import smtplib
-import ssl
 from datetime import date, datetime, timedelta
-from email.message import EmailMessage
 
 from flask import (
     Flask, render_template, request, redirect, url_for, flash, abort, session
@@ -18,6 +15,7 @@ from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from sqlalchemy import inspect, text
 from werkzeug.security import generate_password_hash, check_password_hash
 
+from mailer import EMAIL_DEV_MODE, send_email
 from sitters import SITTERS, SERVICE_LABELS, get_sitter
 
 app = Flask(__name__)
@@ -28,27 +26,12 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'maison-patte-dev-sec
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or 'sqlite:///maison_patte.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# --- Почта и подтверждение email ---
-SMTP_HOST = os.environ.get('SMTP_HOST', '').strip()
-try:
-    SMTP_PORT = int(os.environ.get('SMTP_PORT', '587'))
-except ValueError:
-    SMTP_PORT = 587
-SMTP_USER = os.environ.get('SMTP_USER')
-SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD')
-SMTP_FROM = os.environ.get('SMTP_FROM') or SMTP_USER or 'no-reply@zooportal.ru'
-SMTP_SECURITY = os.environ.get('SMTP_SECURITY', 'starttls').lower()  # starttls | ssl | none
-SMTP_TIMEOUT = 10
-# Публический адрес сайта за обратным прокси: если задан, письмо содержит ссылку на нём,
+# --- Подтверждение email ---
+# SMTP и dev-режим настраиваются в mailer.py (переменные окружения / .env).
+# Публичный адрес сайта за обратным прокси: если задан, письмо содержит ссылку на нём,
 # а не на внутреннем хосте, который видит Flask.
 APP_BASE_URL = os.environ.get('APP_BASE_URL', '').rstrip('/')
 
-# Без SMTP письмо не уходит: ссылка пишется в лог и показывается на /confirm-email.
-# Это dev-режим — в нём можно проверить весь сценарий без почтового сервера.
-EMAIL_DEV_MODE = (
-    not SMTP_HOST
-    or os.environ.get('EMAIL_DEV_MODE', '').lower() in ('1', 'true', 'yes')
-)
 CONFIRM_TOKEN_MAX_AGE = 24 * 60 * 60  # ссылка живёт сутки
 CONFIRM_RESEND_COOLDOWN = timedelta(seconds=60)  # не даём спамить повторными письмами
 
@@ -257,35 +240,17 @@ def _send_confirmation_email(user, link):
         app.logger.info('[DEV] Подтверждение email для %s: %s', user.email, link)
         return True
 
-    message = EmailMessage()
-    message['Subject'] = 'Подтвердите email — Зоопортал'
-    message['From'] = SMTP_FROM
-    message['To'] = user.email
-    message.set_content(
+    return send_email(
+        user.email,
+        'Подтвердите email — Зоопортал',
         'Здравствуйте!\n\n'
         'Вы зарегистрировались на Зоопортале. Чтобы подтвердить адрес и получить '
         'доступ к личному кабинету, перейдите по ссылке:\n\n'
         f'{link}\n\n'
         'Ссылка действует 24 часа. Если вы не регистрировались, просто '
         'проигнорируйте это письмо — аккаунт останется неподтверждённым.\n\n'
-        'Зоопортал · hello@zooportal.ru'
+        'Зоопортал · hello@zooportal.ru',
     )
-
-    try:
-        if SMTP_SECURITY == 'ssl':
-            smtp = smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=SMTP_TIMEOUT)
-        else:
-            smtp = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=SMTP_TIMEOUT)
-            if SMTP_SECURITY == 'starttls':
-                smtp.starttls(context=ssl.create_default_context())
-        with smtp:
-            if SMTP_USER and SMTP_PASSWORD:
-                smtp.login(SMTP_USER, SMTP_PASSWORD)
-            smtp.send_message(message)
-    except (smtplib.SMTPException, OSError) as exc:
-        app.logger.exception('Не удалось отправить письмо на %s: %s', user.email, exc)
-        return False
-    return True
 
 
 def _issue_confirmation(user):

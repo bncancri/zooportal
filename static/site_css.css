@@ -366,7 +366,7 @@ a:hover {
 
 .sitter-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
   gap: 28px;
 }
 
@@ -384,6 +384,7 @@ a:hover {
 
 .sitter-meta {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
@@ -404,7 +405,6 @@ a:hover {
   font-size: 1.35rem;
   font-weight: 600;
   color: var(--text-primary);
-  white-space: nowrap;
 }
 
 .sitter-bio {

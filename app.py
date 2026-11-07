@@ -1,12 +1,16 @@
 from datetime import date, datetime
 
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import (
+    Flask, render_template, request, redirect, url_for, flash, abort
+)
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
     LoginManager, UserMixin, login_user,
     login_required, logout_user, current_user
 )
 from werkzeug.security import generate_password_hash, check_password_hash
+
+from sitters import SITTERS, SERVICE_LABELS, get_sitter
 
 app = Flask(__name__)
 
@@ -22,6 +26,34 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'  # Куда перенаправлять неавторизованных пользователей
 login_manager.login_message = 'Войдите в аккаунт, чтобы открыть личный кабинет.'
 login_manager.login_message_category = 'error'
+
+# Типы обращений: один экран заявки, три сценария
+REQUEST_KINDS = {
+    'care': {
+        'eyebrow': 'Запрос ухода',
+        'title': 'Заявка на уход',
+        'lead': 'Вы выбрали специалиста. Оставьте контакты — консьерж подтвердит даты, а ситтер получит ветпаспорт питомца до первого визита.',
+        'submit': 'Отправить запрос',
+    },
+    'sitter': {
+        'eyebrow': 'Специалистам',
+        'title': 'Стать специалистом',
+        'lead': 'Расскажите о себе — куратор свяжется, проверит рекомендации и пригласит на собеседование.',
+        'submit': 'Отправить заявку',
+    },
+    'concierge': {
+        'eyebrow': 'Служба консьержа',
+        'title': 'Индивидуальный подбор',
+        'lead': 'Для сложных задач: проживание в загородном доме, послеоперационный уход, знакомство с питомцем заранее. Подберём специалиста вручную.',
+        'submit': 'Отправить заявку',
+    },
+}
+
+REQUEST_STATUS_LABELS = {
+    'new': 'Новая',
+    'in_progress': 'В работе',
+    'done': 'Закрыта',
+}
 
 
 # --- Модели базы данных ---
@@ -41,6 +73,33 @@ class PetPassport(db.Model):
     breed = db.Column(db.String(100))
     birth_date = db.Column(db.String(20))
     vaccinations = db.Column(db.Text)
+
+
+class Request(db.Model):
+    """Обращение: запрос ухода у конкретного ситтера, заявка специалиста или подбор консьержа."""
+    id = db.Column(db.Integer, primary_key=True)
+    kind = db.Column(db.String(20), nullable=False, index=True)
+    status = db.Column(db.String(20), nullable=False, default='new')
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    # Связь с аккаунтом и ветпаспортом (у гостя может быть пусто)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True, index=True)
+    pet_id = db.Column(db.Integer, db.ForeignKey('pet_passport.id'), nullable=True)
+
+    # Если запрос адресован конкретному специалисту из каталога
+    sitter_slug = db.Column(db.String(80), nullable=True)
+    sitter_name = db.Column(db.String(100), nullable=True)
+
+    # Контактные данные на момент обращения
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), nullable=False, index=True)
+    phone = db.Column(db.String(40))
+    district = db.Column(db.String(120))
+    pet_info = db.Column(db.String(200))
+    message = db.Column(db.Text)
+
+    author = db.relationship('User', backref='requests')
+    pet = db.relationship('PetPassport')
 
 
 @login_manager.user_loader
@@ -63,6 +122,20 @@ def _plural(count, one, few, many):
     if 2 <= mod10 <= 4 and not 12 <= mod100 <= 14:
         return few
     return many
+
+
+def _is_valid_email(value):
+    if not value or '@' not in value:
+        return False
+    local, _, domain = value.rpartition('@')
+    return bool(local) and '.' in domain and not domain.startswith('.') and not domain.endswith('.')
+
+
+def _user_pets():
+    """Питомцы текущего пользователя (или пустой список для гостя)."""
+    if not current_user.is_authenticated:
+        return []
+    return PetPassport.query.filter_by(owner_id=current_user.id).order_by(PetPassport.id.desc()).all()
 
 
 @app.template_filter('pet_age')
@@ -91,11 +164,26 @@ def pet_age_filter(birth_date):
     return ' '.join(parts) if parts else 'меньше месяца'
 
 
+@app.context_processor
+def inject_globals():
+    return {
+        'request_kinds': REQUEST_KINDS,
+        'request_status_labels': REQUEST_STATUS_LABELS,
+        'service_labels': SERVICE_LABELS,
+    }
+
+
 # --- Маршруты ---
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    pets = _user_pets()
+    return render_template(
+        'index.html',
+        sitters=SITTERS,
+        hero_pet=pets[0] if pets else None,
+        pets_count=len(pets),
+    )
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -111,6 +199,8 @@ def register():
 
         if not email or not password:
             error = 'Заполните email и пароль.'
+        elif not _is_valid_email(email):
+            error = 'Проверьте адрес электронной почты.'
         elif password != password_confirm:
             error = 'Пароли не совпадают.'
         elif len(password) < 8:
@@ -120,6 +210,10 @@ def register():
         else:
             new_user = User(email=email, password_hash=generate_password_hash(password))
             db.session.add(new_user)
+            db.session.commit()
+
+            # Заявки, отправленные гостем с этим email, привязываем к новому аккаунту
+            Request.query.filter_by(email=email, user_id=None).update({'user_id': new_user.id})
             db.session.commit()
 
             # Автоматический вход после регистрации
@@ -135,6 +229,11 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
 
+    # Куда вернуть пользователя после входа (только внутренние адреса)
+    next_page = request.values.get('next') or ''
+    if not next_page.startswith('/'):
+        next_page = ''
+
     error = None
     if request.method == 'POST':
         email = (request.form.get('email') or '').strip().lower()
@@ -144,11 +243,11 @@ def login():
         if user and check_password_hash(user.password_hash, password):
             login_user(user)
             flash('Вы вошли в личный кабинет.', 'success')
-            return redirect(url_for('dashboard'))
+            return redirect(next_page or url_for('dashboard'))
 
         error = 'Неверный email или пароль.'
 
-    return render_template('login.html', error=error)
+    return render_template('login.html', error=error, next_page=next_page)
 
 
 @app.route('/logout')
@@ -206,7 +305,19 @@ def dashboard():
 
         return redirect(url_for('dashboard'))
 
-    return render_template('dashboard.html', pets=current_user.pets, edit_pet=edit_pet)
+    my_requests = (
+        Request.query
+        .filter_by(user_id=current_user.id)
+        .order_by(Request.created_at.desc())
+        .all()
+    )
+
+    return render_template(
+        'dashboard.html',
+        pets=_user_pets(),
+        edit_pet=edit_pet,
+        my_requests=my_requests,
+    )
 
 
 @app.route('/delete_pet/<int:pet_id>', methods=['POST'])
@@ -221,18 +332,103 @@ def delete_pet(pet_id):
     return redirect(url_for('dashboard'))
 
 
-@app.route('/contact', methods=['POST'])
-def contact():
-    """Заявка консьержу с главной страницы (демо-обработчик без отправки писем)."""
+@app.route('/request/<kind>', methods=['GET'])
+def request_form(kind):
+    """Экран заявки: уход у выбранного ситтера / заявка специалиста / подбор консьержа."""
+    if kind not in REQUEST_KINDS:
+        abort(404)
+
+    sitter = get_sitter(request.args.get('sitter'))
+
+    if kind == 'care' and sitter is None:
+        flash('Сначала выберите специалиста в каталоге — заявка привязывается к нему.', 'error')
+        return redirect(url_for('index', _anchor='catalog'))
+
+    return render_template(
+        'request.html',
+        kind=kind,
+        sitter=sitter,
+        pets=_user_pets(),
+        error=None,
+        form={},
+    )
+
+
+@app.route('/request', methods=['POST'])
+def request_submit():
+    kind = request.form.get('kind', '')
+    if kind not in REQUEST_KINDS:
+        abort(400)
+
+    sitter = get_sitter(request.form.get('sitter')) if kind == 'care' else None
+
     name = (request.form.get('name') or '').strip()
-    email = (request.form.get('email') or '').strip()
+    email = (request.form.get('email') or '').strip().lower()
+    phone = (request.form.get('phone') or '').strip() or None
+    district = (request.form.get('district') or '').strip() or None
+    pet_info = (request.form.get('pet_info') or '').strip() or None
+    message = (request.form.get('message') or '').strip() or None
 
-    if not name or not email:
-        flash('Укажите имя и email — иначе мы не сможем ответить.', 'error')
+    # Питомца берём только из своего аккаунта — чужие id игнорируем
+    pet = None
+    pet_id = request.form.get('pet_id', type=int)
+    if pet_id and current_user.is_authenticated:
+        pet = PetPassport.query.filter_by(id=pet_id, owner_id=current_user.id).first()
+    if pet and not pet_info:
+        pet_info = f'{pet.pet_name}, {pet.species}'
+
+    error = None
+    if not name:
+        error = 'Укажите, как к вам обращаться.'
+    elif not _is_valid_email(email):
+        error = 'Укажите корректный email — на него придёт ответ.'
+    elif kind == 'care' and sitter is None:
+        error = 'Специалист не найден. Выберите его в каталоге заново.'
+    elif kind == 'sitter' and not district:
+        error = 'Укажите район, в котором вам удобно работать.'
+
+    if error:
+        return render_template(
+            'request.html',
+            kind=kind,
+            sitter=sitter,
+            pets=_user_pets(),
+            error=error,
+            form=request.form,
+        )
+
+    new_request = Request(
+        kind=kind,
+        user_id=current_user.id if current_user.is_authenticated else None,
+        pet_id=pet.id if pet else None,
+        sitter_slug=sitter['id'] if sitter else None,
+        sitter_name=sitter['name'] if sitter else None,
+        name=name,
+        email=email,
+        phone=phone,
+        district=district,
+        pet_info=pet_info,
+        message=message,
+    )
+    db.session.add(new_request)
+    db.session.commit()
+
+    # Редирект без якоря: подтверждение (flash) должно быть на виду сразу
+    if kind == 'care':
+        flash(
+            f'Заявка отправлена: {new_request.sitter_name}. Консьерж свяжется с вами на {email}.',
+            'success',
+        )
+        if current_user.is_authenticated:
+            return redirect(url_for('dashboard'))
+        return redirect(url_for('index'))
+
+    if kind == 'sitter':
+        flash(f'Спасибо, {name}! Заявка специалиста принята — куратор ответит на {email}.', 'success')
     else:
-        flash(f'{name}, заявка отправлена. Консьерж ответит на {email} в течение рабочего дня.', 'success')
+        flash(f'{name}, заявка принята. Консьерж ответит на {email} в течение рабочего дня.', 'success')
 
-    return redirect(url_for('index', _anchor='contact'))
+    return redirect(url_for('index'))
 
 
 if __name__ == '__main__':

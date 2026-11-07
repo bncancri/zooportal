@@ -21,6 +21,9 @@
       {% endif %}
 
       <form method="POST" action="{{ url_for('login') }}" class="auth-form">
+        {% if next_page %}
+          <input type="hidden" name="next" value="{{ next_page }}">
+        {% endif %}
         <div class="field-group">
           <label for="email">Email</label>
           <input type="email" id="email" name="email" class="input-control" placeholder="you@example.com" required>

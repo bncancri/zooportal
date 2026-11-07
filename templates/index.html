@@ -17,7 +17,7 @@
         </div>
         <h1>Ситтер, которому можно доверить питомца. И ветпаспорт, который всегда под рукой.</h1>
         <p>
-          Зоопортал объединяет проверенных специалистов по уходу и хранит медицинскую карту питомца в личном кабинете — чтобы ситтер получал точные инструкции, а вы были спокойны.
+          Зоопортал объединяет проверенных специалистов по уходу и хранит медицинскую карточку питомца в личном кабинете — чтобы ситтер получал точные инструкции, а вы были спокойны.
         </p>
         <div class="filter-group hero-actions">
           <a href="#catalog" class="btn">Найти ситтера</a>
@@ -25,6 +25,7 @@
         </div>
       </div>
 
+      <!-- Карточка справа показывает реальное состояние кабинета, а не заглушку -->
       <aside class="hero-card">
         <div class="section-eyebrow">
           <svg width="16" height="16" viewBox="0 0 24 24" class="line-icon">
@@ -33,23 +34,49 @@
           </svg>
           Ветпаспорт в кабинете
         </div>
-        <div class="sitter-meta">
-          <div class="sitter-title">
-            <h3>Арчи</h3>
-            <div class="sitter-location">Вельш-корги · 3 года</div>
+
+        {% if hero_pet %}
+          <div class="sitter-meta">
+            <div class="sitter-title">
+              <h3>{{ hero_pet.pet_name }}</h3>
+              <div class="sitter-location">
+                {{ hero_pet.species }}{% if hero_pet.breed %} · {{ hero_pet.breed }}{% endif %}{% if hero_pet.birth_date %} · {{ hero_pet.birth_date|pet_age }}{% endif %}
+              </div>
+            </div>
+            {% if hero_pet.vaccinations %}
+              <span class="tag">Вакцинирован</span>
+            {% else %}
+              <span class="tag tag-muted">Нет отметки</span>
+            {% endif %}
           </div>
-        </div>
-        <ul class="tag-list">
-          <li class="tag">Вакцинация пройдена</li>
-          <li class="tag">Диета: без курицы</li>
-          <li class="tag">Спокойные прогулки</li>
-        </ul>
-        <p class="hero-card-note">Карточка видна только вам и тому специалисту, которого вы выбрали.</p>
-        <a href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('register') }}" class="hero-card-link">Открыть кабинет →</a>
+          <p class="hero-card-note">Карточка видна только вам и тому специалисту, которого вы выбрали.</p>
+          <a href="{{ url_for('dashboard') }}" class="hero-card-link">Все питомцы ({{ pets_count }}) →</a>
+
+        {% elif current_user.is_authenticated %}
+          <h3>Питомцев пока нет</h3>
+          <p class="hero-card-note">Добавьте карточку — она понадобится, когда вы будете выбирать ситтера.</p>
+          <a href="{{ url_for('dashboard') }}#pet-form" class="btn">Добавить питомца</a>
+
+        {% else %}
+          <div class="sitter-meta">
+            <div class="sitter-title">
+              <h3>Арчи</h3>
+              <div class="sitter-location">Вельш-корги · 3 года</div>
+            </div>
+            <span class="tag tag-muted">Пример</span>
+          </div>
+          <ul class="tag-list">
+            <li class="tag">Вакцинация пройдена</li>
+            <li class="tag">Диета: без курицы</li>
+            <li class="tag">Спокойные прогулки</li>
+          </ul>
+          <p class="hero-card-note">Так выглядит карточка в кабинете. Её видите только вы и выбранный специалист.</p>
+          <a href="{{ url_for('register') }}" class="hero-card-link">Создать свой ветпаспорт →</a>
+        {% endif %}
       </aside>
     </div>
 
-    <form class="search-bar" id="sitter-search" onsubmit="event.preventDefault(); applyFilters();">
+    <form class="search-bar" id="sitter-search" onsubmit="submitSearch(event)">
       <div class="field-group">
         <label for="location">Район</label>
         <input type="search" id="location" class="input-control" placeholder="Например, Хамовники" autocomplete="off" />
@@ -103,9 +130,9 @@
       </div>
       <div class="editorial-card">
         <span class="step-index">03</span>
-        <h3>Передайте анкету</h3>
-        <p>Выбранный ситтер получает карточку питомца перед первым визитом: график лекарств, привычки, контакты вашего врача.</p>
-        <a href="#contact" class="card-link">Написать консьержу →</a>
+        <h3>Отправьте заявку</h3>
+        <p>Заявка уходит конкретному специалисту. Он получает карточку питомца до первого визита: график лекарств, привычки, контакты вашего врача.</p>
+        <a href="#catalog" class="card-link">Выбрать ситтера →</a>
       </div>
     </div>
   </div>
@@ -137,131 +164,30 @@
     </div>
 
     <div id="sitter-list" class="sitter-grid">
-      <article class="sitter-card" data-service="overnight" data-species="dogs cats" data-special="senior" data-district="хамовники">
+      {% for sitter in sitters %}
+      <article class="sitter-card"
+               data-service="{{ sitter.service }}"
+               data-species="{{ sitter.species|join(' ') }}"
+               data-special="{{ sitter.special or '' }}"
+               data-district="{{ sitter.district|lower }}">
         <div>
           <div class="sitter-meta">
             <div class="sitter-title">
-              <h3>Анна Ковалёва</h3>
-              <div class="sitter-location">Хамовники · 1,2 км от вас</div>
+              <h3>{{ sitter.name }}</h3>
+              <div class="sitter-location">{{ sitter.district }} · {{ sitter.distance }}</div>
             </div>
-            <span class="price-tag">4 500 ₽ / сутки</span>
+            <span class="price-tag">{{ sitter.price }}</span>
           </div>
-          <p class="sitter-bio">
-            Бывший ветеринарный фельдшер. Специализируется на пожилых животных, инъекциях по графику и спокойной передержке без других питомцев.
-          </p>
+          <p class="sitter-bio">{{ sitter.bio }}</p>
           <ul class="tag-list">
-            <li class="tag">Инъекции и терапия</li>
-            <li class="tag">Без других животных</li>
-            <li class="tag">Опыт 7 лет</li>
+            {% for tag in sitter.tags %}
+              <li class="tag">{{ tag }}</li>
+            {% endfor %}
           </ul>
         </div>
-        <a href="#contact" class="btn btn-outline">Запросить уход</a>
+        <a href="{{ url_for('request_form', kind='care', sitter=sitter.id) }}" class="btn btn-outline">Запросить уход</a>
       </article>
-
-      <article class="sitter-card" data-service="walks" data-species="dogs" data-district="сокол">
-        <div>
-          <div class="sitter-meta">
-            <div class="sitter-title">
-              <h3>Юрий Мельник</h3>
-              <div class="sitter-location">Сокол · 2,2 км от вас</div>
-            </div>
-            <span class="price-tag">1 800 ₽ / прогулка</span>
-          </div>
-          <p class="sitter-bio">
-            Индивидуальные маршруты по парку и разгрузочные прогулки для пугливых и реактивных собак. Подробный отчёт после каждого выхода.
-          </p>
-          <ul class="tag-list">
-            <li class="tag">Индивидуальный выгул</li>
-            <li class="tag">Бережная адаптация</li>
-            <li class="tag">Отчёт с фото</li>
-          </ul>
-        </div>
-        <a href="#contact" class="btn btn-outline">Запросить уход</a>
-      </article>
-
-      <article class="sitter-card" data-service="visits" data-species="cats" data-district="патриаршие пруды">
-        <div>
-          <div class="sitter-meta">
-            <div class="sitter-title">
-              <h3>Елена Ростова</h3>
-              <div class="sitter-location">Патриаршие пруды · 3,0 км от вас</div>
-            </div>
-            <span class="price-tag">2 400 ₽ / визит</span>
-          </div>
-          <p class="sitter-bio">
-            Специалист по поведению кошек и дневные визиты: кормление по привычному ритуалу, уборка лотка, вычёсывание и игра перед сном.
-          </p>
-          <ul class="tag-list">
-            <li class="tag">Фелинолог</li>
-            <li class="tag">Два визита в день</li>
-            <li class="tag">Уход за домом</li>
-          </ul>
-        </div>
-        <a href="#contact" class="btn btn-outline">Запросить уход</a>
-      </article>
-
-      <article class="sitter-card" data-service="overnight" data-species="dogs cats" data-district="раменки">
-        <div>
-          <div class="sitter-meta">
-            <div class="sitter-title">
-              <h3>Марина Дубова</h3>
-              <div class="sitter-location">Раменки · 4,1 км от вас</div>
-            </div>
-            <span class="price-tag">5 200 ₽ / сутки</span>
-          </div>
-          <p class="sitter-bio">
-            Передержка в квартире без других животных. Готова к питомцам с пищевой аллергией и лечебным рационом.
-          </p>
-          <ul class="tag-list">
-            <li class="tag">Передержка дома</li>
-            <li class="tag">Диетическое питание</li>
-            <li class="tag">Первая помощь</li>
-          </ul>
-        </div>
-        <a href="#contact" class="btn btn-outline">Запросить уход</a>
-      </article>
-
-      <article class="sitter-card" data-service="walks" data-species="dogs" data-special="senior" data-district="басманный">
-        <div>
-          <div class="sitter-meta">
-            <div class="sitter-title">
-              <h3>Игорь Соловьёв</h3>
-              <div class="sitter-location">Басманный · 1,8 км от вас</div>
-            </div>
-            <span class="price-tag">1 600 ₽ / прогулка</span>
-          </div>
-          <p class="sitter-bio">
-            Работает с крупными и сильными собаками, занимается коррекцией поведения на поводке и утренними маршрутами.
-          </p>
-          <ul class="tag-list">
-            <li class="tag">Крупные породы</li>
-            <li class="tag">Кинолог</li>
-            <li class="tag">Утренние прогулки</li>
-          </ul>
-        </div>
-        <a href="#contact" class="btn btn-outline">Запросить уход</a>
-      </article>
-
-      <article class="sitter-card" data-service="visits" data-species="dogs cats" data-special="senior" data-district="хамовники">
-        <div>
-          <div class="sitter-meta">
-            <div class="sitter-title">
-              <h3>Ольга Панина</h3>
-              <div class="sitter-location">Хамовники · 2,6 км от вас</div>
-            </div>
-            <span class="price-tag">2 200 ₽ / визит</span>
-          </div>
-          <p class="sitter-bio">
-            Два визита в день для животных, которые плохо переносят переезды: кормление, лекарства, наблюдение и отчёт владельцу.
-          </p>
-          <ul class="tag-list">
-            <li class="tag">Пожилые питомцы</li>
-            <li class="tag">Лекарства по графику</li>
-            <li class="tag">Отчёт владельцу</li>
-          </ul>
-        </div>
-        <a href="#contact" class="btn btn-outline">Запросить уход</a>
-      </article>
+      {% endfor %}
     </div>
 
     <div id="empty-state" class="empty-state">
@@ -271,7 +197,10 @@
       </svg>
       <h3>По этим критериям специалистов не нашлось</h3>
       <p>Попробуйте изменить район или формат ухода — либо оставьте заявку консьержу, он подберёт ситтера вручную.</p>
-      <button type="button" class="btn" onclick="resetFilters()">Сбросить фильтры</button>
+      <div class="filter-group">
+        <button type="button" class="btn" onclick="resetFilters()">Сбросить фильтры</button>
+        <a href="{{ url_for('request_form', kind='concierge') }}" class="btn btn-outline">Заявка консьержу</a>
+      </div>
     </div>
   </div>
 </section>
@@ -336,7 +265,7 @@
           <li>Куратор и медицинская линия поддержки</li>
           <li>Прозрачные выплаты без скрытых комиссий</li>
         </ul>
-        <a href="#contact" class="btn">Подать заявку</a>
+        <a href="{{ url_for('request_form', kind='sitter') }}" class="btn">Подать заявку</a>
       </div>
     </div>
   </div>
@@ -374,7 +303,9 @@
       </div>
     </div>
 
-    <form class="contact-form" method="POST" action="{{ url_for('contact') }}">
+    <form class="contact-form" method="POST" action="{{ url_for('request_submit') }}">
+      <input type="hidden" name="kind" value="concierge">
+
       <div class="form-row">
         <div class="field-group">
           <label for="name">Ваше имя</label>
@@ -388,8 +319,8 @@
 
       <div class="form-row">
         <div class="field-group">
-          <label for="pet-profile">Имя, порода и возраст питомца</label>
-          <input type="text" id="pet-profile" name="pet_profile" class="input-control" placeholder="Например, Барнаби, уиппет, 9 лет" />
+          <label for="pet_info">Имя, порода и возраст питомца</label>
+          <input type="text" id="pet_info" name="pet_info" class="input-control" placeholder="Например, Барнаби, уиппет, 9 лет" />
         </div>
         <div class="field-group">
           <label for="district">Район или загородная резиденция</label>
@@ -398,8 +329,8 @@
       </div>
 
       <div class="field-group">
-        <label for="notes">Привычный распорядок и особенности</label>
-        <textarea id="notes" name="notes" class="input-control" placeholder="Опишите время прогулок, график приёма лекарств и пожелания по уходу за домом..."></textarea>
+        <label for="message">Задача и особенности ухода</label>
+        <textarea id="message" name="message" class="input-control" placeholder="Опишите формат ухода, график приёма лекарств и пожелания по дому..."></textarea>
       </div>
 
       <div>
@@ -471,6 +402,18 @@
       chip.classList.toggle('btn-outline', !active);
       chip.classList.toggle('is-active', active);
     });
+  }
+
+  function scrollToCatalog() {
+    const catalog = document.getElementById('catalog');
+    if (catalog) catalog.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /* Отправка формы поиска: применяем фильтры и сразу показываем результат */
+  function submitSearch(event) {
+    if (event) event.preventDefault();
+    applyFilters();
+    scrollToCatalog();
   }
 
   chips.forEach(function (chip) {

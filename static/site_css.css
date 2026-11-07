@@ -707,6 +707,60 @@ textarea.input-control {
   margin-top: 18px;
 }
 
+/* Заявки в кабинете */
+.request-list {
+  display: grid;
+  gap: 12px;
+}
+
+.request-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  background-color: var(--bg-surface);
+  border: var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-subtle);
+  padding: 20px 24px;
+}
+
+.request-item h3 {
+  font-size: 1.15rem;
+  margin-bottom: 4px;
+}
+
+.request-item p {
+  margin-top: 8px;
+  font-size: 0.9375rem;
+  color: var(--text-muted);
+}
+
+.request-item .tag {
+  white-space: nowrap;
+}
+
+.form-hint {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.form-hint a,
+.catalog-count a {
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+/* Экран заявки */
+.contact-info h1 {
+  font-size: 2.5rem;
+  margin-bottom: 16px;
+}
+
+.request-sitter {
+  margin-top: 8px;
+}
+
 /* Расширенный подвал */
 .site-footer {
   background-color: rgba(245, 239, 231, 0.92);
@@ -856,5 +910,15 @@ textarea.input-control {
   .cta-band {
     padding: 28px;
     gap: 28px;
+  }
+}
+
+@media (max-width: 640px) {
+  .request-item {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .request-item .tag {
+    order: -1;
   }
 }

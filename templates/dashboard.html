@@ -131,6 +131,50 @@
   </div>
 </section>
 
+<!-- Заявки: всё, что пользователь отправил в сервис -->
+<section class="directory-section" id="requests">
+  <div class="container">
+    <div class="directory-header">
+      <div>
+        <div class="section-eyebrow">
+          <svg width="18" height="18" viewBox="0 0 24 24" class="line-icon">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+          Обращения
+        </div>
+        <h2>Мои заявки</h2>
+      </div>
+      <a href="{{ url_for('index') }}#catalog" class="btn btn-outline">Выбрать специалиста</a>
+    </div>
+
+    {% if my_requests %}
+      <div class="request-list">
+        {% for item in my_requests %}
+        <article class="request-item">
+          <div>
+            <h3>{{ request_kinds[item.kind].title }}{% if item.sitter_name %}: {{ item.sitter_name }}{% endif %}</h3>
+            <div class="sitter-location">
+              {% if item.pet_info %}{{ item.pet_info }} · {% endif %}
+              {{ item.created_at.strftime('%d.%m.%Y') }}
+            </div>
+            {% if item.message %}
+              <p>{{ item.message }}</p>
+            {% endif %}
+          </div>
+          <span class="tag{% if item.status != 'new' %} tag-muted{% endif %}">{{ request_status_labels[item.status] }}</span>
+        </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="catalog-count">
+        Заявок пока нет. Выберите специалиста в
+        <a href="{{ url_for('index') }}#catalog">каталоге</a> — отправленные заявки появятся здесь.
+      </p>
+    {% endif %}
+  </div>
+</section>
+
 <!-- Форма: создание или редактирование карточки -->
 <section class="editorial-section" id="pet-form">
   <div class="container">

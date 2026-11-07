@@ -42,7 +42,7 @@
               <a href="{{ url_for('logout') }}" class="btn btn-outline">Выйти</a>
             </li>
           {% else %}
-            <li><a href="{{ url_for('index') }}#sitters">Стать ситтером</a></li>
+            <li><a href="{{ url_for('request_form', kind='sitter') }}">Стать ситтером</a></li>
             <li><a href="{{ url_for('login') }}">Войти</a></li>
             <li><a href="{{ url_for('register') }}" class="btn">Создать аккаунт</a></li>
           {% endif %}
@@ -88,7 +88,7 @@
             <li><a href="{{ url_for('index') }}#catalog">Каталог ситтеров</a></li>
             <li><a href="{{ url_for('index') }}#how">Как это работает</a></li>
             <li><a href="{{ url_for('index') }}#standards">Стандарты заботы</a></li>
-            <li><a href="{{ url_for('index') }}#sitters">Стать ситтером</a></li>
+            <li><a href="{{ url_for('request_form', kind='sitter') }}">Стать ситтером</a></li>
           </ul>
         </div>
 

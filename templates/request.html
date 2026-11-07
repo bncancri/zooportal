@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% set info = request_kinds[kind] %}
+
+{% block title %}
+  {%- if kind == 'care' and sitter -%}
+    Заявка на уход: {{ sitter.name }} — Зоопортал
+  {%- else -%}
+    {{ info.title }} — Зоопортал
+  {%- endif -%}
+{% endblock %}
+
+{% block content %}
+<section class="contact-section">
+  <div class="container contact-grid">
+
+    <!-- Левая колонка: к кому обращаемся и почему это логично -->
+    <div class="contact-info">
+      <div class="section-eyebrow">
+        <svg width="16" height="16" viewBox="0 0 24 24" class="line-icon">
+          {% if kind == 'care' %}
+            <path d="M12 14c-2.5 0-4.5 1.8-4.5 4.2 0 1.5 1.2 2.3 2.6 2.3 1 0 1.9-.4 1.9-.4s.9.4 1.9.4c1.4 0 2.6-.8 2.6-2.3C16.5 15.8 14.5 14 12 14z"/>
+            <circle cx="7.5" cy="10.5" r="1.5"/>
+            <circle cx="10.5" cy="8" r="1.5"/>
+            <circle cx="13.5" cy="8" r="1.5"/>
+            <circle cx="16.5" cy="10.5" r="1.5"/>
+          {% else %}
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          {% endif %}
+        </svg>
+        {{ info.eyebrow }}
+      </div>
+
+      <h1>{{ info.title }}</h1>
+      <p>{{ info.lead }}</p>
+
+      {% if kind == 'care' and sitter %}
+        <div class="sitter-card request-sitter">
+          <div>
+            <div class="sitter-meta">
+              <div class="sitter-title">
+                <h3>{{ sitter.name }}</h3>
+                <div class="sitter-location">{{ sitter.district }} · {{ sitter.distance }}</div>
+              </div>
+              <span class="price-tag">{{ sitter.price }}</span>
+            </div>
+            <p class="sitter-bio">{{ sitter.bio }}</p>
+            <ul class="tag-list">
+              <li class="tag">{{ service_labels[sitter.service] }}</li>
+              {% for tag in sitter.tags %}
+                <li class="tag">{{ tag }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+          <a href="{{ url_for('index') }}#catalog" class="card-link">Выбрать другого специалиста →</a>
+        </div>
+
+      {% elif kind == 'sitter' %}
+        <ul class="cta-band-list">
+          <li>Опыт работы с животными от года</li>
+          <li>Рекомендации от врача или постоянных клиентов</li>
+          <li>Готовность к собеседованию и проверке документов</li>
+        </ul>
+        <p class="form-hint">Отвечаем в течение двух рабочих дней.</p>
+
+      {% else %}
+        <div class="contact-details">
+          <div class="detail-item">
+            <span>Адрес студии</span>
+            <strong>Москва, ул. Большая Никитская, 12, офис 4</strong>
+          </div>
+          <div class="detail-item">
+            <span>Прямая линия консьержа</span>
+            <strong>hello@zooportal.ru · +7 (495) 019-28-34</strong>
+          </div>
+          <div class="detail-item">
+            <span>Часы консультаций</span>
+            <strong>Понедельник — Суббота, с 08:00 до 19:00</strong>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Правая колонка: сама заявка -->
+    <form class="contact-form" method="POST" action="{{ url_for('request_submit') }}">
+      <input type="hidden" name="kind" value="{{ kind }}">
+      {% if sitter %}
+        <input type="hidden" name="sitter" value="{{ sitter.id }}">
+      {% endif %}
+
+      {% if error %}
+        <p class="flash flash-error">{{ error }}</p>
+      {% endif %}
+
+      <div class="form-row">
+        <div class="field-group">
+          <label for="name">Как к вам обращаться</label>
+          <input type="text" id="name" name="name" class="input-control" placeholder="Например, Артур" value="{{ form.get('name', '') }}" required>
+        </div>
+        <div class="field-group">
+          <label for="email">Электронная почта</label>
+          <input type="email" id="email" name="email" class="input-control" placeholder="you@example.com" value="{{ form.get('email', '') }}" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="field-group">
+          <label for="phone">Телефон</label>
+          <input type="tel" id="phone" name="phone" class="input-control" placeholder="+7 (___) ___-__-__" value="{{ form.get('phone', '') }}">
+        </div>
+
+        {% if kind == 'sitter' %}
+          <div class="field-group">
+            <label for="district">Район работы</label>
+            <input type="text" id="district" name="district" class="input-control" placeholder="Хамовники" value="{{ form.get('district', '') }}" required>
+          </div>
+        {% else %}
+          <div class="field-group">
+            <label for="district">Район</label>
+            <input type="text" id="district" name="district" class="input-control" placeholder="Хамовники" value="{{ form.get('district', '') }}">
+          </div>
+        {% endif %}
+      </div>
+
+      {% if kind == 'care' %}
+        <div class="field-group">
+          <label for="pet_id">Питомец</label>
+          {% if current_user.is_authenticated and pets %}
+            <select id="pet_id" name="pet_id" class="input-control">
+              <option value="">Не указывать в заявке</option>
+              {% for pet in pets %}
+                <option value="{{ pet.id }}" {% if form.get('pet_id') == pet.id|string %}selected{% endif %}>
+                  {{ pet.pet_name }}{% if pet.breed %} · {{ pet.breed }}{% endif %}
+                </option>
+              {% endfor %}
+            </select>
+            <p class="form-hint">Ситтер получит ветпаспорт выбранного питомца вместе с заявкой.</p>
+          {% elif current_user.is_authenticated %}
+            <p class="form-hint">
+              В ветпаспорте пока нет питомцев. <a href="{{ url_for('dashboard') }}#pet-form">Добавьте карточку</a> — ситтер получит её до первого визита.
+            </p>
+          {% else %}
+            <p class="form-hint">
+              <a href="{{ url_for('login', next=request.path + ('?' + request.query_string.decode() if request.query_string else '')) }}">Войдите в аккаунт</a>, чтобы приложить к заявке ветпаспорт питомца.
+            </p>
+          {% endif %}
+        </div>
+      {% elif kind == 'concierge' %}
+        <div class="field-group">
+          <label for="pet_info">Питомец: имя, порода и возраст</label>
+          <input type="text" id="pet_info" name="pet_info" class="input-control" placeholder="Например, Барнаби, уиппет, 9 лет" value="{{ form.get('pet_info', '') }}">
+        </div>
+      {% endif %}
+
+      <div class="field-group">
+        {% if kind == 'sitter' %}
+          <label for="message">Опыт и о себе</label>
+          <textarea id="message" name="message" class="input-control" placeholder="С какими животными работаете, есть ли медицинское образование, сколько лет опыта...">{{ form.get('message', '') }}</textarea>
+        {% else %}
+          <label for="message">Даты, распорядок и особенности</label>
+          <textarea id="message" name="message" class="input-control" placeholder="Когда нужен ситтер, график прогулок и приёма лекарств, особенности характера...">{{ form.get('message', '') }}</textarea>
+        {% endif %}
+      </div>
+
+      <div class="filter-group">
+        <button type="submit" class="btn">{{ info.submit }}</button>
+        <a href="{{ url_for('index') }}{% if kind == 'care' %}#catalog{% endif %}" class="btn btn-outline">Отмена</a>
+      </div>
+
+      <p class="form-hint">Отправляя заявку, вы соглашаетесь с обработкой персональных данных.</p>
+    </form>
+  </div>
+</section>
+{% endblock %}

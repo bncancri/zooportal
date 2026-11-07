@@ -922,3 +922,14 @@ textarea.input-control {
     order: -1;
   }
 }
+
+/* Keep the shared language selector compact in desktop and mobile navigation. */
+.primary-nav .filter-group {
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.primary-nav select.input-control {
+  width: auto;
+  padding: 8px 10px;
+}

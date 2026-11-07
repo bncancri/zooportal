@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Зоопортал — проверенные ситтеры и ветпаспорт питомца{% endblock %}
+{% block title %}{{ _('Зоопортал — проверенные ситтеры и ветпаспорт питомца') }}{% endblock %}
 
 {% block content %}
 
@@ -13,15 +13,15 @@
           <svg width="18" height="18" viewBox="0 0 24 24" class="line-icon">
             <path d="M3 18c2-1 4-4 5-8 1-3 3-4 5-2 1 1 2 3 4 3 2 0 3-1 4-2-1 4-3 7-6 8-3 1-7 1-12 1z"/>
           </svg>
-          Присмотр за питомцами · Москва
+          {{ _('Присмотр за питомцами · Москва') }}
         </div>
-        <h1>Ситтер, которому можно доверить питомца. И ветпаспорт, который всегда под рукой.</h1>
+        <h1>{{ _('Ситтер, которому можно доверить питомца. И ветпаспорт, который всегда под рукой.') }}</h1>
         <p>
-          Зоопортал объединяет проверенных специалистов по уходу и хранит медицинскую карточку питомца в личном кабинете — чтобы ситтер получал точные инструкции, а вы были спокойны.
+          {{ _('Зоопортал объединяет проверенных специалистов по уходу и хранит медицинскую карточку питомца в личном кабинете — чтобы ситтер получал точные инструкции, а вы были спокойны.') }}
         </p>
         <div class="filter-group hero-actions">
-          <a href="#catalog" class="btn">Найти ситтера</a>
-          <a href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('register') }}" class="btn btn-outline">Заполнить ветпаспорт</a>
+          <a href="#catalog" class="btn">{{ _('Найти ситтера') }}</a>
+          <a href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('register') }}" class="btn btn-outline">{{ _('Заполнить ветпаспорт') }}</a>
         </div>
       </div>
 
@@ -32,7 +32,7 @@
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
             <polyline points="14 2 14 8 20 8"/>
           </svg>
-          Ветпаспорт в кабинете
+          {{ _('Ветпаспорт в кабинете') }}
         </div>
 
         {% if hero_pet %}
@@ -40,66 +40,66 @@
             <div class="sitter-title">
               <h3>{{ hero_pet.pet_name }}</h3>
               <div class="sitter-location">
-                {{ hero_pet.species }}{% if hero_pet.breed %} · {{ hero_pet.breed }}{% endif %}{% if hero_pet.birth_date %} · {{ hero_pet.birth_date|pet_age }}{% endif %}
+                {{ hero_pet.species|t }}{% if hero_pet.breed %} · {{ hero_pet.breed }}{% endif %}{% if hero_pet.birth_date %} · {{ hero_pet.birth_date|pet_age }}{% endif %}
               </div>
             </div>
             {% if hero_pet.vaccinations %}
-              <span class="tag">Вакцинирован</span>
+              <span class="tag">{{ _('Вакцинирован') }}</span>
             {% else %}
-              <span class="tag tag-muted">Нет отметки</span>
+              <span class="tag tag-muted">{{ _('Нет отметки') }}</span>
             {% endif %}
           </div>
-          <p class="hero-card-note">Карточка видна только вам и тому специалисту, которого вы выбрали.</p>
-          <a href="{{ url_for('dashboard') }}" class="hero-card-link">Все питомцы ({{ pets_count }}) →</a>
+          <p class="hero-card-note">{{ _('Карточка видна только вам и тому специалисту, которого вы выбрали.') }}</p>
+          <a href="{{ url_for('dashboard') }}" class="hero-card-link">{{ _('Все питомцы (') }}{{ pets_count }}) →</a>
 
         {% elif current_user.is_authenticated %}
-          <h3>Питомцев пока нет</h3>
-          <p class="hero-card-note">Добавьте карточку — она понадобится, когда вы будете выбирать ситтера.</p>
-          <a href="{{ url_for('dashboard') }}#pet-form" class="btn">Добавить питомца</a>
+          <h3>{{ _('Питомцев пока нет') }}</h3>
+          <p class="hero-card-note">{{ _('Добавьте карточку — она понадобится, когда вы будете выбирать ситтера.') }}</p>
+          <a href="{{ url_for('dashboard') }}#pet-form" class="btn">{{ _('Добавить питомца') }}</a>
 
         {% else %}
           <div class="sitter-meta">
             <div class="sitter-title">
-              <h3>Арчи</h3>
-              <div class="sitter-location">Вельш-корги · 3 года</div>
+              <h3>{{ _('Арчи') }}</h3>
+              <div class="sitter-location">{{ _('Вельш-корги · 3 года') }}</div>
             </div>
-            <span class="tag tag-muted">Пример</span>
+            <span class="tag tag-muted">{{ _('Пример') }}</span>
           </div>
           <ul class="tag-list">
-            <li class="tag">Вакцинация пройдена</li>
-            <li class="tag">Диета: без курицы</li>
-            <li class="tag">Спокойные прогулки</li>
+            <li class="tag">{{ _('Вакцинация пройдена') }}</li>
+            <li class="tag">{{ _('Диета: без курицы') }}</li>
+            <li class="tag">{{ _('Спокойные прогулки') }}</li>
           </ul>
-          <p class="hero-card-note">Так выглядит карточка в кабинете. Её видите только вы и выбранный специалист.</p>
-          <a href="{{ url_for('register') }}" class="hero-card-link">Создать свой ветпаспорт →</a>
+          <p class="hero-card-note">{{ _('Так выглядит карточка в кабинете. Её видите только вы и выбранный специалист.') }}</p>
+          <a href="{{ url_for('register') }}" class="hero-card-link">{{ _('Создать свой ветпаспорт →') }}</a>
         {% endif %}
       </aside>
     </div>
 
     <form class="search-bar" id="sitter-search" onsubmit="submitSearch(event)">
       <div class="field-group">
-        <label for="location">Район</label>
-        <input type="search" id="location" class="input-control" placeholder="Например, Хамовники" autocomplete="off" />
+        <label for="location">{{ _('Район') }}</label>
+        <input type="search" id="location" class="input-control" placeholder="{{ _('Например, Хамовники') }}" autocomplete="off" />
       </div>
       <div class="field-group">
-        <label for="service">Формат ухода</label>
+        <label for="service">{{ _('Формат ухода') }}</label>
         <select id="service" class="input-control">
-          <option value="all">Любой формат</option>
-          <option value="overnight">Проживание с питомцем</option>
-          <option value="walks">Прогулки</option>
-          <option value="visits">Дневные визиты</option>
+          <option value="all">{{ _('Любой формат') }}</option>
+          <option value="overnight">{{ _('Проживание с питомцем') }}</option>
+          <option value="walks">{{ _('Прогулки') }}</option>
+          <option value="visits">{{ _('Дневные визиты') }}</option>
         </select>
       </div>
       <div class="field-group">
-        <label for="companion">Питомец</label>
+        <label for="companion">{{ _('Питомец') }}</label>
         <select id="companion" class="input-control">
-          <option value="all">Собаки и кошки</option>
-          <option value="dogs">Только собаки</option>
-          <option value="cats">Только кошки</option>
-          <option value="special">Пожилые и особый уход</option>
+          <option value="all">{{ _('Собаки и кошки') }}</option>
+          <option value="dogs">{{ _('Только собаки') }}</option>
+          <option value="cats">{{ _('Только кошки') }}</option>
+          <option value="special">{{ _('Пожилые и особый уход') }}</option>
         </select>
       </div>
-      <button type="submit" class="btn">Показать</button>
+      <button type="submit" class="btn">{{ _('Показать') }}</button>
     </form>
   </div>
 </section>
@@ -111,28 +111,28 @@
       <svg width="16" height="16" viewBox="0 0 24 24" class="line-icon">
         <path d="M4 6h16M4 12h10M4 18h7"/>
       </svg>
-      Три шага
+      {{ _('Три шага') }}
     </div>
-    <h2>От карточки питомца до спокойного отпуска</h2>
+    <h2>{{ _('От карточки питомца до спокойного отпуска') }}</h2>
 
     <div class="editorial-grid">
       <div class="editorial-card">
         <span class="step-index">01</span>
-        <h3>Заполните ветпаспорт</h3>
-        <p>Вид, порода, дата рождения, вакцинация и особенности ухода. Это занимает пару минут и хранится в личном кабинете.</p>
-        <a href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('register') }}" class="card-link">Открыть кабинет →</a>
+        <h3>{{ _('Заполните ветпаспорт') }}</h3>
+        <p>{{ _('Вид, порода, дата рождения, вакцинация и особенности ухода. Это занимает пару минут и хранится в личном кабинете.') }}</p>
+        <a href="{{ url_for('dashboard') if current_user.is_authenticated else url_for('register') }}" class="card-link">{{ _('Открыть кабинет →') }}</a>
       </div>
       <div class="editorial-card">
         <span class="step-index">02</span>
-        <h3>Подберите ситтера</h3>
-        <p>Фильтруйте специалистов по району, формату ухода и виду питомца. У каждого — опыт, специализация и стоимость без скрытых доплат.</p>
-        <a href="#catalog" class="card-link">Смотреть каталог →</a>
+        <h3>{{ _('Подберите ситтера') }}</h3>
+        <p>{{ _('Фильтруйте специалистов по району, формату ухода и виду питомца. У каждого — опыт, специализация и стоимость без скрытых доплат.') }}</p>
+        <a href="#catalog" class="card-link">{{ _('Смотреть каталог →') }}</a>
       </div>
       <div class="editorial-card">
         <span class="step-index">03</span>
-        <h3>Отправьте заявку</h3>
-        <p>Заявка уходит конкретному специалисту. Он получает карточку питомца до первого визита: график лекарств, привычки, контакты вашего врача.</p>
-        <a href="#catalog" class="card-link">Выбрать ситтера →</a>
+        <h3>{{ _('Отправьте заявку') }}</h3>
+        <p>{{ _('Заявка уходит конкретному специалисту. Он получает карточку питомца до первого визита: график лекарств, привычки, контакты вашего врача.') }}</p>
+        <a href="#catalog" class="card-link">{{ _('Выбрать ситтера →') }}</a>
       </div>
     </div>
   </div>
@@ -148,19 +148,19 @@
             <circle cx="12" cy="12" r="9"/>
             <path d="M12 8v4l3 2"/>
           </svg>
-          Кураторский список
+          {{ _('Кураторский список') }}
         </div>
-        <h2>Доступные специалисты</h2>
+        <h2>{{ _('Доступные специалисты') }}</h2>
       </div>
       <p class="catalog-count" id="catalog-count"></p>
     </div>
 
     <div class="filter-group catalog-filters">
-      <button type="button" class="btn is-active" data-service="all">Все</button>
-      <button type="button" class="btn btn-outline" data-service="overnight">Проживание</button>
-      <button type="button" class="btn btn-outline" data-service="walks">Прогулки</button>
-      <button type="button" class="btn btn-outline" data-service="visits">Дневные визиты</button>
-      <button type="button" class="btn btn-outline" data-service="special">Особый уход</button>
+      <button type="button" class="btn is-active" data-service="all">{{ _('Все') }}</button>
+      <button type="button" class="btn btn-outline" data-service="overnight">{{ _('Проживание') }}</button>
+      <button type="button" class="btn btn-outline" data-service="walks">{{ _('Прогулки') }}</button>
+      <button type="button" class="btn btn-outline" data-service="visits">{{ _('Дневные визиты') }}</button>
+      <button type="button" class="btn btn-outline" data-service="special">{{ _('Особый уход') }}</button>
     </div>
 
     <div id="sitter-list" class="sitter-grid">
@@ -169,23 +169,23 @@
                data-service="{{ sitter.service }}"
                data-species="{{ sitter.species|join(' ') }}"
                data-special="{{ sitter.special or '' }}"
-               data-district="{{ sitter.district|lower }}">
+               data-district="{{ sitter.district|lower }} {{ sitter.district|t|lower }}">
         <div>
           <div class="sitter-meta">
             <div class="sitter-title">
-              <h3>{{ sitter.name }}</h3>
-              <div class="sitter-location">{{ sitter.district }}</div>
+              <h3>{{ sitter.name|t }}</h3>
+              <div class="sitter-location">{{ sitter.district|t }}</div>
             </div>
-            <span class="price-tag">{{ sitter.price }}</span>
+            <span class="price-tag">{{ sitter.price|t }}</span>
           </div>
-          <p class="sitter-bio">{{ sitter.bio }}</p>
+          <p class="sitter-bio">{{ sitter.bio|t }}</p>
           <ul class="tag-list">
             {% for tag in sitter.tags %}
-              <li class="tag">{{ tag }}</li>
+              <li class="tag">{{ tag|t }}</li>
             {% endfor %}
           </ul>
         </div>
-        <a href="{{ url_for('request_form', kind='care', sitter=sitter.id) }}" class="btn btn-outline">Запросить уход</a>
+        <a href="{{ url_for('request_form', kind='care', sitter=sitter.id) }}" class="btn btn-outline">{{ _('Запросить уход') }}</a>
       </article>
       {% endfor %}
     </div>
@@ -195,11 +195,11 @@
         <path d="M12 48c6-1 10-6 12-14 2-7 6-10 11-7 3 2 5 7 9 7 4 0 6-3 8-6-2 9-6 16-14 19-6 2-15 1-26 1z"/>
         <circle cx="44" cy="20" r="2"/>
       </svg>
-      <h3>По этим критериям специалистов не нашлось</h3>
-      <p>Попробуйте изменить район или формат ухода — либо оставьте заявку консьержу, он подберёт ситтера вручную.</p>
+      <h3>{{ _('По этим критериям специалистов не нашлось') }}</h3>
+      <p>{{ _('Попробуйте изменить район или формат ухода — либо оставьте заявку консьержу, он подберёт ситтера вручную.') }}</p>
       <div class="filter-group">
-        <button type="button" class="btn" onclick="resetFilters()">Сбросить фильтры</button>
-        <a href="{{ url_for('request_form', kind='concierge') }}" class="btn btn-outline">Заявка консьержу</a>
+        <button type="button" class="btn" onclick="resetFilters()">{{ _('Сбросить фильтры') }}</button>
+        <a href="{{ url_for('request_form', kind='concierge') }}" class="btn btn-outline">{{ _('Заявка консьержу') }}</a>
       </div>
     </div>
   </div>
@@ -212,9 +212,9 @@
       <svg width="16" height="16" viewBox="0 0 24 24" class="line-icon">
         <path d="M12 2L15 8L21 9L16.5 14L18 20L12 17L6 20L7.5 14L3 9L9 8L12 2Z"/>
       </svg>
-      Протокол Зоопортала
+      {{ _('Протокол Зоопортала') }}
     </div>
-    <h2>Ручной отбор без автоматических алгоритмов</h2>
+    <h2>{{ _('Ручной отбор без автоматических алгоритмов') }}</h2>
 
     <div class="editorial-grid">
       <div class="editorial-card">
@@ -222,23 +222,23 @@
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
         </svg>
-        <h3>Трёхэтапная проверка</h3>
-        <p>Личное собеседование, верификация рекомендаций от ветеринарных врачей и проверка документов до первого заказа.</p>
+        <h3>{{ _('Трёхэтапная проверка') }}</h3>
+        <p>{{ _('Личное собеседование, верификация рекомендаций от ветеринарных врачей и проверка документов до первого заказа.') }}</p>
       </div>
       <div class="editorial-card">
         <svg width="28" height="28" viewBox="0 0 24 24" class="line-icon">
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
           <polyline points="9 22 9 12 15 12 15 22"/>
         </svg>
-        <h3>Одна семья за раз</h3>
-        <p>Специалисты не объединяют питомцев из разных домов — ни на прогулке, ни на передержке.</p>
+        <h3>{{ _('Одна семья за раз') }}</h3>
+        <p>{{ _('Специалисты не объединяют питомцев из разных домов — ни на прогулке, ни на передержке.') }}</p>
       </div>
       <div class="editorial-card">
         <svg width="28" height="28" viewBox="0 0 24 24" class="line-icon">
           <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
         </svg>
-        <h3>Связь с врачом</h3>
-        <p>К каждому заказу прилагается ветпаспорт питомца и круглосуточная линия с дежурным врачом-куратором.</p>
+        <h3>{{ _('Связь с врачом') }}</h3>
+        <p>{{ _('К каждому заказу прилагается ветпаспорт питомца и круглосуточная линия с дежурным врачом-куратором.') }}</p>
       </div>
     </div>
   </div>
@@ -254,18 +254,18 @@
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
             <circle cx="12" cy="7" r="4"/>
           </svg>
-          Специалистам
+          {{ _('Специалистам') }}
         </div>
-        <h2>Вы профессионально ухаживаете за животными?</h2>
-        <p>Подключитесь к каталогу: заявки приходят только по вашему району, а ветпаспорт питомца вы видите до первого визита.</p>
+        <h2>{{ _('Вы профессионально ухаживаете за животными?') }}</h2>
+        <p>{{ _('Подключитесь к каталогу: заявки приходят только по вашему району, а ветпаспорт питомца вы видите до первого визита.') }}</p>
       </div>
       <div>
         <ul class="cta-band-list">
-          <li>Свободный график и заявки рядом с домом</li>
-          <li>Куратор и медицинская линия поддержки</li>
-          <li>Прозрачные выплаты без скрытых комиссий</li>
+          <li>{{ _('Свободный график и заявки рядом с домом') }}</li>
+          <li>{{ _('Куратор и медицинская линия поддержки') }}</li>
+          <li>{{ _('Прозрачные выплаты без скрытых комиссий') }}</li>
         </ul>
-        <a href="{{ url_for('request_form', kind='sitter') }}" class="btn">Подать заявку</a>
+        <a href="{{ url_for('request_form', kind='sitter') }}" class="btn">{{ _('Подать заявку') }}</a>
       </div>
     </div>
   </div>
@@ -280,25 +280,25 @@
           <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
           <polyline points="22,6 12,13 2,6"/>
         </svg>
-        Служба консьержа
+        {{ _('Служба консьержа') }}
       </div>
-      <h2>Индивидуальный подбор и личные консультации</h2>
+      <h2>{{ _('Индивидуальный подбор и личные консультации') }}</h2>
       <p>
-        Нужен ситтер с проживанием в загородном доме, послеоперационный уход или предварительное знакомство с питомцем? Напишите нам — подберём специалиста вручную.
+        {{ _('Нужен ситтер с проживанием в загородном доме, послеоперационный уход или предварительное знакомство с питомцем? Напишите нам — подберём специалиста вручную.') }}
       </p>
 
       <div class="contact-details">
         <div class="detail-item">
-          <span>Адрес студии</span>
-          <strong>Москва, ул. Большая Никитская, 12, офис 4</strong>
+          <span>{{ _('Адрес студии') }}</span>
+          <strong>{{ _('Москва, ул. Большая Никитская, 12, офис 4') }}</strong>
         </div>
         <div class="detail-item">
-          <span>Прямая линия консьержа</span>
+          <span>{{ _('Прямая линия консьержа') }}</span>
           <strong>hello@zooportal.ru · +7 (495) 019-28-34</strong>
         </div>
         <div class="detail-item">
-          <span>Часы консультаций</span>
-          <strong>Понедельник — Суббота, с 08:00 до 19:00</strong>
+          <span>{{ _('Часы консультаций') }}</span>
+          <strong>{{ _('Понедельник — Суббота, с 08:00 до 19:00') }}</strong>
         </div>
       </div>
     </div>
@@ -308,58 +308,58 @@
 
       <div class="form-row">
         <div class="field-group">
-          <label for="name">Ваше имя</label>
-          <input type="text" id="name" name="name" class="input-control" placeholder="Например, Артур Пендлтон" value="{{ form.get('name', '') }}" required />
+          <label for="name">{{ _('Ваше имя') }}</label>
+          <input type="text" id="name" name="name" class="input-control" placeholder="{{ _('Например, Артур Пендлтон') }}" value="{{ form.get('name', '') }}" required />
         </div>
         <div class="field-group">
-          <label for="email">Электронная почта</label>
+          <label for="email">{{ _('Электронная почта') }}</label>
           <input type="email" id="email" name="email" class="input-control" placeholder="arthur@domain.com" value="{{ form.get('email', '') }}" required />
         </div>
       </div>
 
       <div class="form-row">
         <div class="field-group">
-          <label for="phone">Телефон</label>
+          <label for="phone">{{ _('Телефон') }}</label>
           <input type="tel" id="phone" name="phone" class="input-control" placeholder="+7 (___) ___-__-__" value="{{ form.get('phone', '') }}" />
         </div>
         <div class="field-group">
-          <label for="district">Район или загородная резиденция</label>
-          <input type="text" id="district" name="district" class="input-control" placeholder="Хамовники" value="{{ form.get('district', '') }}" />
+          <label for="district">{{ _('Район или загородная резиденция') }}</label>
+          <input type="text" id="district" name="district" class="input-control" placeholder="{{ _('Хамовники') }}" value="{{ form.get('district', '') }}" />
         </div>
       </div>
 
       <div class="field-group">
-        <label for="pet_info">Имя, порода и возраст питомца</label>
-        <input type="text" id="pet_info" name="pet_info" class="input-control" placeholder="Например, Барнаби, уиппет, 9 лет" value="{{ form.get('pet_info', '') }}" />
-        <p class="form-hint">Опишите питомца текстом или приложите ветпаспорт из кабинета — имя, порода, возраст и отметка о вакцинации добавятся к заявке автоматически, отдельно ничего прикреплять не нужно.</p>
+        <label for="pet_info">{{ _('Имя, порода и возраст питомца') }}</label>
+        <input type="text" id="pet_info" name="pet_info" class="input-control" placeholder="{{ _('Например, Барнаби, уиппет, 9 лет') }}" value="{{ form.get('pet_info', '') }}" />
+        <p class="form-hint">{{ _('Опишите питомца текстом или приложите ветпаспорт из кабинета — имя, порода, возраст и отметка о вакцинации добавятся к заявке автоматически, отдельно ничего прикреплять не нужно.') }}</p>
       </div>
 
       {% if current_user.is_authenticated and pets %}
         <div class="field-group">
-          <label for="pet_id">Ветпаспорт из кабинета</label>
+          <label for="pet_id">{{ _('Ветпаспорт из кабинета') }}</label>
           <select id="pet_id" name="pet_id" class="input-control">
-            <option value="">Не прикладывать</option>
+            <option value="">{{ _('Не прикладывать') }}</option>
             {% for pet in pets %}
               <option value="{{ pet.id }}" {% if form.get('pet_id') == pet.id|string %}selected{% endif %}>
                 {{ pet.pet_name }}{% if pet.breed %} · {{ pet.breed }}{% endif %}
               </option>
             {% endfor %}
           </select>
-          <p class="form-hint">Консьерж получит карточку питомца вместе с заявкой. Все поля можно изменить перед отправкой.</p>
+          <p class="form-hint">{{ _('Консьерж получит карточку питомца вместе с заявкой. Все поля можно изменить перед отправкой.') }}</p>
         </div>
       {% elif current_user.is_authenticated %}
-        <p class="form-hint">В ветпаспорте пока нет питомцев. <a href="{{ url_for('dashboard') }}#pet-form">Добавьте карточку</a> — консьерж учтёт её данные при подборе.</p>
+        <p class="form-hint">{{ _('В ветпаспорте пока нет питомцев.') }} <a href="{{ url_for('dashboard') }}#pet-form">{{ _('Добавьте карточку') }}</a> {{ _('— консьерж учтёт её данные при подборе.') }}</p>
       {% else %}
-        <p class="form-hint"><a href="{{ url_for('login', next=request.path + '#contact') }}">Войдите в аккаунт</a>, чтобы приложить к заявке ветпаспорт и подтянуть контакты.</p>
+        <p class="form-hint"><a href="{{ url_for('login', next=request.path + '#contact') }}">{{ _('Войдите в аккаунт') }}</a>{{ _(', чтобы приложить к заявке ветпаспорт и подтянуть контакты.') }}</p>
       {% endif %}
 
       <div class="field-group">
-        <label for="message">Задача и особенности ухода</label>
-        <textarea id="message" name="message" class="input-control" placeholder="Опишите формат ухода, график приёма лекарств и пожелания по дому...">{{ form.get('message', '') }}</textarea>
+        <label for="message">{{ _('Задача и особенности ухода') }}</label>
+        <textarea id="message" name="message" class="input-control" placeholder="{{ _('Опишите формат ухода, график приёма лекарств и пожелания по дому...') }}">{{ form.get('message', '') }}</textarea>
       </div>
 
       <div>
-        <button type="submit" class="btn">Отправить заявку</button>
+        <button type="submit" class="btn">{{ _('Отправить заявку') }}</button>
       </div>
     </form>
   </div>
@@ -419,7 +419,10 @@
     if (empty) empty.classList.toggle('is-visible', visible === 0);
     if (grid) grid.hidden = visible === 0;
     if (counter) {
-      counter.textContent = 'Найдено ' + visible + ' ' + plural(visible, ['специалист', 'специалиста', 'специалистов']);
+      const locale = {{ locale|tojson }};
+      counter.textContent = locale === 'ru'
+        ? 'Найдено ' + visible + ' ' + plural(visible, ['специалист', 'специалиста', 'специалистов'])
+        : {{ _('Найдено {count} специалистов')|tojson }}.replace('{count}', visible);
     }
 
     chips.forEach(function (chip) {

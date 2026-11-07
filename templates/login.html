@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Вход — Зоопортал{% endblock %}
+{% block title %}{{ _('Вход — Зоопортал') }}{% endblock %}
 
 {% block content %}
 <section class="auth-section">
@@ -11,13 +11,13 @@
           <rect x="3" y="11" width="18" height="11" rx="2"/>
           <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
         </svg>
-        Вход в аккаунт
+        {{ _('Вход в аккаунт') }}
       </div>
-      <h1>Личный кабинет</h1>
-      <p class="auth-lead">Войдите, чтобы открыть ветпаспорта питомцев и передать анкету ситтеру.</p>
+      <h1>{{ _('Личный кабинет') }}</h1>
+      <p class="auth-lead">{{ _('Войдите, чтобы открыть ветпаспорта питомцев и передать анкету ситтеру.') }}</p>
 
       {% if error %}
-        <p class="flash flash-error">{{ error }}</p>
+        <p class="flash flash-error">{{ error|t }}</p>
       {% endif %}
 
       <form method="POST" action="{{ url_for('login') }}" class="auth-form">
@@ -29,13 +29,13 @@
           <input type="email" id="email" name="email" class="input-control" placeholder="you@example.com" required>
         </div>
         <div class="field-group">
-          <label for="password">Пароль</label>
-          <input type="password" id="password" name="password" class="input-control" placeholder="Ваш пароль" required>
+          <label for="password">{{ _('Пароль') }}</label>
+          <input type="password" id="password" name="password" class="input-control" placeholder="{{ _('Ваш пароль') }}" required>
         </div>
-        <button type="submit" class="btn btn-block">Войти</button>
+        <button type="submit" class="btn btn-block">{{ _('Войти') }}</button>
       </form>
 
-      <p class="auth-switch">Нет аккаунта? <a href="{{ url_for('register') }}">Создать аккаунт</a></p>
+      <p class="auth-switch">{{ _('Нет аккаунта?') }} <a href="{{ url_for('register') }}">{{ _('Создать аккаунт') }}</a></p>
     </div>
   </div>
 </section>

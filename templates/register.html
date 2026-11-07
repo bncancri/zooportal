@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Регистрация — Зоопортал{% endblock %}
+{% block title %}{{ _('Регистрация — Зоопортал') }}{% endblock %}
 
 {% block content %}
 <section class="auth-section">
@@ -13,13 +13,13 @@
           <line x1="19" y1="8" x2="19" y2="14"/>
           <line x1="16" y1="11" x2="22" y2="11"/>
         </svg>
-        Новый аккаунт
+        {{ _('Новый аккаунт') }}
       </div>
-      <h1>Создать аккаунт</h1>
-      <p class="auth-lead">Аккаунт нужен, чтобы хранить ветпаспорта питомцев и передавать их ситтеру.</p>
+      <h1>{{ _('Создать аккаунт') }}</h1>
+      <p class="auth-lead">{{ _('Аккаунт нужен, чтобы хранить ветпаспорта питомцев и передавать их ситтеру.') }}</p>
 
       {% if error %}
-        <p class="flash flash-error">{{ error }}</p>
+        <p class="flash flash-error">{{ error|t }}</p>
       {% endif %}
 
       <form method="POST" action="{{ url_for('register') }}" class="auth-form">
@@ -28,17 +28,17 @@
           <input type="email" id="email" name="email" class="input-control" placeholder="you@example.com" required>
         </div>
         <div class="field-group">
-          <label for="password">Пароль</label>
-          <input type="password" id="password" name="password" class="input-control" placeholder="Не менее 8 символов" minlength="8" required>
+          <label for="password">{{ _('Пароль') }}</label>
+          <input type="password" id="password" name="password" class="input-control" placeholder="{{ _('Не менее 8 символов') }}" minlength="8" required>
         </div>
         <div class="field-group">
-          <label for="password_confirm">Повторите пароль</label>
-          <input type="password" id="password_confirm" name="password_confirm" class="input-control" placeholder="Ещё раз" minlength="8" required>
+          <label for="password_confirm">{{ _('Повторите пароль') }}</label>
+          <input type="password" id="password_confirm" name="password_confirm" class="input-control" placeholder="{{ _('Ещё раз') }}" minlength="8" required>
         </div>
-        <button type="submit" class="btn btn-block">Зарегистрироваться</button>
+        <button type="submit" class="btn btn-block">{{ _('Зарегистрироваться') }}</button>
       </form>
 
-      <p class="auth-switch">Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти</a></p>
+      <p class="auth-switch">{{ _('Уже есть аккаунт?') }} <a href="{{ url_for('login') }}">{{ _('Войти') }}</a></p>
     </div>
   </div>
 </section>

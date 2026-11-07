@@ -4,9 +4,9 @@
 
 {% block title %}
   {%- if kind == 'care' and sitter -%}
-    Заявка на уход: {{ sitter.name }} — Зоопортал
+    {{ _('Заявка на уход:') }} {{ sitter.name|t }} {{ _('— Зоопортал') }}
   {%- else -%}
-    {{ info.title }} — Зоопортал
+    {{ info.title|t }} {{ _('— Зоопортал') }}
   {%- endif -%}
 {% endblock %}
 
@@ -29,54 +29,54 @@
             <polyline points="22,6 12,13 2,6"/>
           {% endif %}
         </svg>
-        {{ info.eyebrow }}
+        {{ info.eyebrow|t }}
       </div>
 
-      <h1>{{ info.title }}</h1>
-      <p>{{ info.lead }}</p>
+      <h1>{{ info.title|t }}</h1>
+      <p>{{ info.lead|t }}</p>
 
       {% if kind == 'care' and sitter %}
         <div class="sitter-card request-sitter">
           <div>
             <div class="sitter-meta">
               <div class="sitter-title">
-                <h3>{{ sitter.name }}</h3>
-                <div class="sitter-location">{{ sitter.district }}</div>
+                <h3>{{ sitter.name|t }}</h3>
+                <div class="sitter-location">{{ sitter.district|t }}</div>
               </div>
-              <span class="price-tag">{{ sitter.price }}</span>
+              <span class="price-tag">{{ sitter.price|t }}</span>
             </div>
-            <p class="sitter-bio">{{ sitter.bio }}</p>
+            <p class="sitter-bio">{{ sitter.bio|t }}</p>
             <ul class="tag-list">
-              <li class="tag">{{ service_labels[sitter.service] }}</li>
+              <li class="tag">{{ service_labels[sitter.service]|t }}</li>
               {% for tag in sitter.tags %}
-                <li class="tag">{{ tag }}</li>
+                <li class="tag">{{ tag|t }}</li>
               {% endfor %}
             </ul>
           </div>
-          <a href="{{ url_for('index') }}#catalog" class="card-link">Выбрать другого специалиста →</a>
+          <a href="{{ url_for('index') }}#catalog" class="card-link">{{ _('Выбрать другого специалиста →') }}</a>
         </div>
 
       {% elif kind == 'sitter' %}
         <ul class="cta-band-list">
-          <li>Опыт работы с животными от года</li>
-          <li>Рекомендации от врача или постоянных клиентов</li>
-          <li>Готовность к собеседованию и проверке документов</li>
+          <li>{{ _('Опыт работы с животными от года') }}</li>
+          <li>{{ _('Рекомендации от врача или постоянных клиентов') }}</li>
+          <li>{{ _('Готовность к собеседованию и проверке документов') }}</li>
         </ul>
-        <p class="form-hint">Отвечаем в течение двух рабочих дней.</p>
+        <p class="form-hint">{{ _('Отвечаем в течение двух рабочих дней.') }}</p>
 
       {% else %}
         <div class="contact-details">
           <div class="detail-item">
-            <span>Адрес студии</span>
-            <strong>Москва, ул. Большая Никитская, 12, офис 4</strong>
+            <span>{{ _('Адрес студии') }}</span>
+            <strong>{{ _('Москва, ул. Большая Никитская, 12, офис 4') }}</strong>
           </div>
           <div class="detail-item">
-            <span>Прямая линия консьержа</span>
+            <span>{{ _('Прямая линия консьержа') }}</span>
             <strong>hello@zooportal.ru · +7 (495) 019-28-34</strong>
           </div>
           <div class="detail-item">
-            <span>Часы консультаций</span>
-            <strong>Понедельник — Суббота, с 08:00 до 19:00</strong>
+            <span>{{ _('Часы консультаций') }}</span>
+            <strong>{{ _('Понедельник — Суббота, с 08:00 до 19:00') }}</strong>
           </div>
         </div>
       {% endif %}
@@ -90,117 +90,117 @@
       {% endif %}
 
       {% if error %}
-        <p class="flash flash-error">{{ error }}</p>
+        <p class="flash flash-error">{{ error|t }}</p>
       {% endif %}
 
       <div class="form-row">
         <div class="field-group">
-          <label for="name">Как к вам обращаться</label>
-          <input type="text" id="name" name="name" class="input-control" placeholder="Например, Артур" value="{{ form.get('name', '') }}" required>
+          <label for="name">{{ _('Как к вам обращаться') }}</label>
+          <input type="text" id="name" name="name" class="input-control" placeholder="{{ _('Например, Артур') }}" value="{{ form.get('name', '') }}" required>
         </div>
         <div class="field-group">
-          <label for="email">Электронная почта</label>
+          <label for="email">{{ _('Электронная почта') }}</label>
           <input type="email" id="email" name="email" class="input-control" placeholder="you@example.com" value="{{ form.get('email', '') }}" required>
         </div>
       </div>
 
       <div class="form-row">
         <div class="field-group">
-          <label for="phone">Телефон</label>
+          <label for="phone">{{ _('Телефон') }}</label>
           <input type="tel" id="phone" name="phone" class="input-control" placeholder="+7 (___) ___-__-__" value="{{ form.get('phone', '') }}">
         </div>
 
         {% if kind == 'sitter' %}
           <div class="field-group">
-            <label for="district">Район работы</label>
-            <input type="text" id="district" name="district" class="input-control" placeholder="Хамовники" value="{{ form.get('district', '') }}" required>
+            <label for="district">{{ _('Район работы') }}</label>
+            <input type="text" id="district" name="district" class="input-control" placeholder="{{ _('Хамовники') }}" value="{{ form.get('district', '') }}" required>
           </div>
         {% else %}
           <div class="field-group">
-            <label for="district">Район</label>
-            <input type="text" id="district" name="district" class="input-control" placeholder="Хамовники" value="{{ form.get('district', '') }}">
+            <label for="district">{{ _('Район') }}</label>
+            <input type="text" id="district" name="district" class="input-control" placeholder="{{ _('Хамовники') }}" value="{{ form.get('district', '') }}">
           </div>
         {% endif %}
       </div>
 
       {% if kind == 'care' %}
         <div class="field-group">
-          <label for="pet_info">Питомец: имя, порода и возраст</label>
-          <input type="text" id="pet_info" name="pet_info" class="input-control" placeholder="Например, Барнаби, уиппет, 9 лет" {% if not (current_user.is_authenticated and pets) %}required {% endif %}value="{{ form.get('pet_info', '') }}">
+          <label for="pet_info">{{ _('Питомец: имя, порода и возраст') }}</label>
+          <input type="text" id="pet_info" name="pet_info" class="input-control" placeholder="{{ _('Например, Барнаби, уиппет, 9 лет') }}" {% if not (current_user.is_authenticated and pets) %}required {% endif %}value="{{ form.get('pet_info', '') }}">
           <p class="form-hint">
             {% if current_user.is_authenticated %}
-              Поле обязательно, если ветпаспорт не выбран. Данные карточки (порода, возраст, вакцинация) добавятся к заявке автоматически — отдельно ничего прикреплять не нужно.
+              {{ _('Поле обязательно, если ветпаспорт не выбран. Данные карточки (порода, возраст, вакцинация) добавятся к заявке автоматически — отдельно ничего прикреплять не нужно.') }}
             {% else %}
-              <a href="{{ url_for('login', next=request.path + ('?' + request.query_string.decode() if request.query_string else '')) }}">Войдите в аккаунт</a>, чтобы приложить ветпаспорт. Без аккаунта достаточно этого описания.
+              <a href="{{ url_for('login', next=request.path + ('?' + request.query_string.decode() if request.query_string else '')) }}">{{ _('Войдите в аккаунт') }}</a>{{ _(', чтобы приложить ветпаспорт. Без аккаунта достаточно этого описания.') }}
             {% endif %}
           </p>
         </div>
 
         {% if current_user.is_authenticated and pets %}
           <div class="field-group">
-            <label for="pet_id">Ветпаспорт из кабинета</label>
+            <label for="pet_id">{{ _('Ветпаспорт из кабинета') }}</label>
             <select id="pet_id" name="pet_id" class="input-control">
-              <option value="">Не прикладывать</option>
+              <option value="">{{ _('Не прикладывать') }}</option>
               {% for pet in pets %}
                 <option value="{{ pet.id }}" {% if form.get('pet_id') == pet.id|string %}selected{% endif %}>
                   {{ pet.pet_name }}{% if pet.breed %} · {{ pet.breed }}{% endif %}
                 </option>
               {% endfor %}
             </select>
-            <p class="form-hint">Ситтер получит карточку выбранного питомца до первого визита.</p>
+            <p class="form-hint">{{ _('Ситтер получит карточку выбранного питомца до первого визита.') }}</p>
           </div>
         {% elif current_user.is_authenticated %}
           <p class="form-hint">
-            В ветпаспорте пока нет питомцев. <a href="{{ url_for('dashboard') }}#pet-form">Добавьте карточку</a> — ситтер получит её до первого визита.
+            {{ _('В ветпаспорте пока нет питомцев.') }} <a href="{{ url_for('dashboard') }}#pet-form">{{ _('Добавьте карточку') }}</a> {{ _('— ситтер получит её до первого визита.') }}
           </p>
         {% endif %}
       {% elif kind == 'concierge' %}
         <div class="field-group">
-          <label for="pet_info">Питомец: имя, порода и возраст</label>
-          <input type="text" id="pet_info" name="pet_info" class="input-control" placeholder="Например, Барнаби, уиппет, 9 лет" value="{{ form.get('pet_info', '') }}">
-          <p class="form-hint">Опишите питомца текстом или приложите ветпаспорт из кабинета — имя, порода, возраст и отметка о вакцинации добавятся к заявке автоматически, отдельно ничего прикреплять не нужно.</p>
+          <label for="pet_info">{{ _('Питомец: имя, порода и возраст') }}</label>
+          <input type="text" id="pet_info" name="pet_info" class="input-control" placeholder="{{ _('Например, Барнаби, уиппет, 9 лет') }}" value="{{ form.get('pet_info', '') }}">
+          <p class="form-hint">{{ _('Опишите питомца текстом или приложите ветпаспорт из кабинета — имя, порода, возраст и отметка о вакцинации добавятся к заявке автоматически, отдельно ничего прикреплять не нужно.') }}</p>
         </div>
 
         {% if current_user.is_authenticated and pets %}
           <div class="field-group">
-            <label for="pet_id">Ветпаспорт из кабинета</label>
+            <label for="pet_id">{{ _('Ветпаспорт из кабинета') }}</label>
             <select id="pet_id" name="pet_id" class="input-control">
-              <option value="">Не прикладывать</option>
+              <option value="">{{ _('Не прикладывать') }}</option>
               {% for pet in pets %}
                 <option value="{{ pet.id }}" {% if form.get('pet_id') == pet.id|string %}selected{% endif %}>
                   {{ pet.pet_name }}{% if pet.breed %} · {{ pet.breed }}{% endif %}
                 </option>
               {% endfor %}
             </select>
-            <p class="form-hint">Консьерж получит карточку питомца вместе с заявкой.</p>
+            <p class="form-hint">{{ _('Консьерж получит карточку питомца вместе с заявкой.') }}</p>
           </div>
         {% elif current_user.is_authenticated %}
           <p class="form-hint">
-            В ветпаспорте пока нет питомцев. <a href="{{ url_for('dashboard') }}#pet-form">Добавьте карточку</a> — консьерж учтёт её данные при подборе.
+            {{ _('В ветпаспорте пока нет питомцев.') }} <a href="{{ url_for('dashboard') }}#pet-form">{{ _('Добавьте карточку') }}</a> {{ _('— консьерж учтёт её данные при подборе.') }}
           </p>
         {% else %}
           <p class="form-hint">
-            <a href="{{ url_for('login', next=request.path) }}">Войдите в аккаунт</a>, чтобы приложить к заявке ветпаспорт питомца.
+            <a href="{{ url_for('login', next=request.path) }}">{{ _('Войдите в аккаунт') }}</a>{{ _(', чтобы приложить к заявке ветпаспорт питомца.') }}
           </p>
         {% endif %}
       {% endif %}
 
       <div class="field-group">
         {% if kind == 'sitter' %}
-          <label for="message">Опыт и о себе</label>
-          <textarea id="message" name="message" class="input-control" placeholder="С какими животными работаете, есть ли медицинское образование, сколько лет опыта...">{{ form.get('message', '') }}</textarea>
+          <label for="message">{{ _('Опыт и о себе') }}</label>
+          <textarea id="message" name="message" class="input-control" placeholder="{{ _('С какими животными работаете, есть ли медицинское образование, сколько лет опыта...') }}">{{ form.get('message', '') }}</textarea>
         {% else %}
-          <label for="message">Даты, распорядок и особенности</label>
-          <textarea id="message" name="message" class="input-control" placeholder="Когда нужен ситтер, график прогулок и приёма лекарств, особенности характера...">{{ form.get('message', '') }}</textarea>
+          <label for="message">{{ _('Даты, распорядок и особенности') }}</label>
+          <textarea id="message" name="message" class="input-control" placeholder="{{ _('Когда нужен ситтер, график прогулок и приёма лекарств, особенности характера...') }}">{{ form.get('message', '') }}</textarea>
         {% endif %}
       </div>
 
       <div class="filter-group">
-        <button type="submit" class="btn">{{ info.submit }}</button>
-        <a href="{{ url_for('index') }}{% if kind == 'care' %}#catalog{% endif %}" class="btn btn-outline">Отмена</a>
+        <button type="submit" class="btn">{{ info.submit|t }}</button>
+        <a href="{{ url_for('index') }}{% if kind == 'care' %}#catalog{% endif %}" class="btn btn-outline">{{ _('Отмена') }}</a>
       </div>
 
-      <p class="form-hint">Отправляя заявку, вы соглашаетесь с обработкой персональных данных.</p>
+      <p class="form-hint">{{ _('Отправляя заявку, вы соглашаетесь с обработкой персональных данных.') }}</p>
     </form>
   </div>
 </section>

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Личный кабинет — Зоопортал{% endblock %}
+{% block title %}{{ _('Личный кабинет — Зоопортал') }}{% endblock %}
 
 {% block content %}
 
@@ -14,15 +14,15 @@
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
             <circle cx="12" cy="7" r="4"/>
           </svg>
-          Профиль владельца
+          {{ _('Профиль владельца') }}
         </div>
-        <h1>Питомцы и ветпаспорта</h1>
+        <h1>{{ _('Питомцы и ветпаспорта') }}</h1>
         <p>
-          Заполните карточку один раз — и передавайте её ситтеру перед каждым визитом. Данные видны только вам и специалисту, которого вы выбрали.
+          {{ _('Заполните карточку один раз — и передавайте её ситтеру перед каждым визитом. Данные видны только вам и специалисту, которого вы выбрали.') }}
         </p>
         <div class="filter-group hero-actions">
-          <a href="#pet-form" class="btn">Добавить питомца</a>
-          <a href="{{ url_for('index') }}#catalog" class="btn btn-outline">Найти ситтера</a>
+          <a href="#pet-form" class="btn">{{ _('Добавить питомца') }}</a>
+          <a href="{{ url_for('index') }}#catalog" class="btn btn-outline">{{ _('Найти ситтера') }}</a>
         </div>
       </div>
 
@@ -32,7 +32,7 @@
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
             <circle cx="12" cy="7" r="4"/>
           </svg>
-          Ваш аккаунт
+          {{ _('Ваш аккаунт') }}
         </div>
         <div class="contact-details">
           <div class="detail-item">
@@ -40,12 +40,12 @@
             <strong>{{ current_user.email }}</strong>
           </div>
           <div class="detail-item">
-            <span>Питомцев в кабинете</span>
+            <span>{{ _('Питомцев в кабинете') }}</span>
             <strong>{{ pets|length }}</strong>
           </div>
           <div class="detail-item">
-            <span>С отметкой о вакцинации</span>
-            <strong>{{ pets|selectattr('vaccinations')|list|length }} из {{ pets|length }}</strong>
+            <span>{{ _('С отметкой о вакцинации') }}</span>
+            <strong>{{ pets|selectattr('vaccinations')|list|length }} {{ _('из') }} {{ pets|length }}</strong>
           </div>
         </div>
       </aside>
@@ -66,12 +66,12 @@
             <circle cx="13.5" cy="8" r="1.5"/>
             <circle cx="16.5" cy="10.5" r="1.5"/>
           </svg>
-          Ветеринарные карточки
+          {{ _('Ветеринарные карточки') }}
         </div>
-        <h2>Мои питомцы</h2>
+        <h2>{{ _('Мои питомцы') }}</h2>
       </div>
       {% if pets %}
-        <a href="#pet-form" class="btn">Добавить питомца</a>
+        <a href="#pet-form" class="btn">{{ _('Добавить питомца') }}</a>
       {% endif %}
     </div>
 
@@ -83,25 +83,25 @@
             <div class="sitter-meta">
               <div class="sitter-title">
                 <h3>{{ pet.pet_name }}</h3>
-                <div class="sitter-location">{{ pet.species }}{% if pet.breed %} · {{ pet.breed }}{% endif %}</div>
+                <div class="sitter-location">{{ pet.species|t }}{% if pet.breed %} · {{ pet.breed }}{% endif %}</div>
               </div>
               {% if pet.vaccinations %}
-                <span class="tag">Вакцинирован</span>
+                <span class="tag">{{ _('Вакцинирован') }}</span>
               {% else %}
-                <span class="tag tag-muted">Нет отметки</span>
+                <span class="tag tag-muted">{{ _('Нет отметки') }}</span>
               {% endif %}
             </div>
 
             <div class="contact-details pet-details">
               {% if pet.birth_date %}
                 <div class="detail-item">
-                  <span>Дата рождения</span>
+                  <span>{{ _('Дата рождения') }}</span>
                   <strong>{{ pet.birth_date }}</strong>
                 </div>
               {% endif %}
               {% if pet.birth_date|pet_age %}
                 <div class="detail-item">
-                  <span>Возраст</span>
+                  <span>{{ _('Возраст') }}</span>
                   <strong>{{ pet.birth_date|pet_age }}</strong>
                 </div>
               {% endif %}
@@ -109,9 +109,9 @@
           </div>
 
           <div class="filter-group">
-            <a href="{{ url_for('dashboard', edit_id=pet.id) }}#pet-form" class="btn btn-outline">Редактировать</a>
-            <form action="{{ url_for('delete_pet', pet_id=pet.id) }}" method="POST" class="inline-form" onsubmit="return confirm('Удалить карточку питомца? Данные нельзя восстановить.');">
-              <button type="submit" class="btn btn-outline">Удалить</button>
+            <a href="{{ url_for('dashboard', edit_id=pet.id) }}#pet-form" class="btn btn-outline">{{ _('Редактировать') }}</a>
+            <form action="{{ url_for('delete_pet', pet_id=pet.id) }}" method="POST" class="inline-form" onsubmit="return confirm({{ _('Удалить карточку питомца? Данные нельзя восстановить.')|tojson|forceescape }});">
+              <button type="submit" class="btn btn-outline">{{ _('Удалить') }}</button>
             </form>
           </div>
         </article>
@@ -123,9 +123,9 @@
           <path d="M12 48c6-1 10-6 12-14 2-7 6-10 11-7 3 2 5 7 9 7 4 0 6-3 8-6-2 9-6 16-14 19-6 2-15 1-26 1z"/>
           <circle cx="44" cy="20" r="2"/>
         </svg>
-        <h3>В кабинете пока нет питомцев</h3>
-        <p>Добавьте первую карточку — она понадобится, когда вы будете выбирать ситтера.</p>
-        <a href="#pet-form" class="btn">Создать ветпаспорт</a>
+        <h3>{{ _('В кабинете пока нет питомцев') }}</h3>
+        <p>{{ _('Добавьте первую карточку — она понадобится, когда вы будете выбирать ситтера.') }}</p>
+        <a href="#pet-form" class="btn">{{ _('Создать ветпаспорт') }}</a>
       </div>
     {% endif %}
   </div>
@@ -141,11 +141,11 @@
             <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
             <polyline points="22,6 12,13 2,6"/>
           </svg>
-          Обращения
+          {{ _('Обращения') }}
         </div>
-        <h2>Мои заявки</h2>
+        <h2>{{ _('Мои заявки') }}</h2>
       </div>
-      <a href="{{ url_for('index') }}#catalog" class="btn btn-outline">Выбрать специалиста</a>
+      <a href="{{ url_for('index') }}#catalog" class="btn btn-outline">{{ _('Выбрать специалиста') }}</a>
     </div>
 
     {% if my_requests %}
@@ -153,7 +153,7 @@
         {% for item in my_requests %}
         <article class="request-item">
           <div>
-            <h3>{{ request_kinds[item.kind].title }}{% if item.sitter_name %}: {{ item.sitter_name }}{% endif %}</h3>
+            <h3>{{ request_kinds[item.kind].title|t }}{% if item.sitter_name %}: {{ item.sitter_name|t }}{% endif %}</h3>
             <div class="sitter-location">
               {% if item.pet_info %}{{ item.pet_info }} · {% endif %}
               {{ item.created_at.strftime('%d.%m.%Y') }}
@@ -162,14 +162,14 @@
               <p>{{ item.message }}</p>
             {% endif %}
           </div>
-          <span class="tag{% if item.status != 'new' %} tag-muted{% endif %}">{{ request_status_labels[item.status] }}</span>
+          <span class="tag{% if item.status != 'new' %} tag-muted{% endif %}">{{ request_status_labels[item.status]|t }}</span>
         </article>
         {% endfor %}
       </div>
     {% else %}
       <p class="catalog-count">
-        Заявок пока нет. Выберите специалиста в
-        <a href="{{ url_for('index') }}#catalog">каталоге</a> — отправленные заявки появятся здесь.
+        {{ _('Заявок пока нет. Выберите специалиста в') }}
+        <a href="{{ url_for('index') }}#catalog">{{ _('каталоге') }}</a> {{ _('— отправленные заявки появятся здесь.') }}
       </p>
     {% endif %}
   </div>
@@ -185,9 +185,9 @@
         <line x1="12" y1="18" x2="12" y2="12"/>
         <line x1="9" y1="15" x2="15" y2="15"/>
       </svg>
-      {{ 'Редактирование записи' if edit_pet else 'Новая запись' }}
+      {{ ('Редактирование записи' if edit_pet else 'Новая запись')|t }}
     </div>
-    <h2>{{ 'Редактировать ветпаспорт' if edit_pet else 'Добавить ветпаспорт' }}</h2>
+    <h2>{{ ('Редактировать ветпаспорт' if edit_pet else 'Добавить ветпаспорт')|t }}</h2>
 
     <form action="{{ url_for('dashboard') }}#pet-form" method="POST" class="contact-form pet-form">
       {% if edit_pet %}
@@ -196,15 +196,15 @@
 
       <div class="form-row">
         <div class="field-group">
-          <label for="pet_name">Имя питомца</label>
-          <input type="text" id="pet_name" name="pet_name" class="input-control" placeholder="Например, Арчи" value="{{ edit_pet.pet_name if edit_pet else '' }}" required>
+          <label for="pet_name">{{ _('Имя питомца') }}</label>
+          <input type="text" id="pet_name" name="pet_name" class="input-control" placeholder="{{ _('Например, Арчи') }}" value="{{ edit_pet.pet_name if edit_pet else '' }}" required>
         </div>
         <div class="field-group">
-          <label for="species">Вид животного</label>
+          <label for="species">{{ _('Вид животного') }}</label>
           <select id="species" name="species" class="input-control" required>
-            <option value="" disabled {% if not edit_pet %}selected{% endif %}>Выберите вид</option>
+            <option value="" disabled {% if not edit_pet %}selected{% endif %}>{{ _('Выберите вид') }}</option>
             {% for option in ['Собака', 'Кошка', 'Грызун', 'Птица', 'Другое'] %}
-              <option value="{{ option }}" {% if edit_pet and edit_pet.species == option %}selected{% endif %}>{{ option }}</option>
+              <option value="{{ option }}" {% if edit_pet and edit_pet.species == option %}selected{% endif %}>{{ option|t }}</option>
             {% endfor %}
           </select>
         </div>
@@ -212,11 +212,11 @@
 
       <div class="form-row">
         <div class="field-group">
-          <label for="breed">Порода</label>
-          <input type="text" id="breed" name="breed" class="input-control" placeholder="Например, Вельш-корги пемброк" value="{{ edit_pet.breed if edit_pet else '' }}">
+          <label for="breed">{{ _('Порода') }}</label>
+          <input type="text" id="breed" name="breed" class="input-control" placeholder="{{ _('Например, Вельш-корги пемброк') }}" value="{{ edit_pet.breed if edit_pet else '' }}">
         </div>
         <div class="field-group">
-          <label for="birth_date">Дата рождения</label>
+          <label for="birth_date">{{ _('Дата рождения') }}</label>
           <input type="date" id="birth_date" name="birth_date" class="input-control" value="{{ edit_pet.birth_date if edit_pet else '' }}">
         </div>
       </div>
@@ -224,14 +224,14 @@
       <div class="field-group">
         <label class="checkbox-field" for="vaccinations">
           <input type="checkbox" id="vaccinations" name="vaccinations" value="Вакцинирован" {% if edit_pet and edit_pet.vaccinations %}checked{% endif %}>
-          Вакцинация пройдена
+          {{ _('Вакцинация пройдена') }}
         </label>
       </div>
 
       <div class="filter-group">
-        <button type="submit" class="btn">{{ 'Сохранить изменения' if edit_pet else 'Сохранить карточку' }}</button>
+        <button type="submit" class="btn">{{ ('Сохранить изменения' if edit_pet else 'Сохранить карточку')|t }}</button>
         {% if edit_pet %}
-          <a href="{{ url_for('dashboard') }}" class="btn btn-outline">Отмена</a>
+          <a href="{{ url_for('dashboard') }}" class="btn btn-outline">{{ _('Отмена') }}</a>
         {% endif %}
       </div>
     </form>

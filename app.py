@@ -1,7 +1,8 @@
 from datetime import date, datetime
+from urllib.parse import urlsplit
 
 from flask import (
-    Flask, render_template, request, redirect, url_for, flash, abort
+    Flask, render_template, request, redirect, url_for, flash, abort, session
 )
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
@@ -9,6 +10,8 @@ from flask_login import (
     login_required, logout_user, current_user
 )
 from werkzeug.security import generate_password_hash, check_password_hash
+
+from i18n import LANGUAGES, get_locale, translate
 
 from sitters import SITTERS, SERVICE_LABELS, get_sitter
 
@@ -26,6 +29,8 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'  # Куда перенаправлять неавторизованных пользователей
 login_manager.login_message = 'Войдите в аккаунт, чтобы открыть личный кабинет.'
 login_manager.login_message_category = 'error'
+login_manager.localize_callback = translate
+app.jinja_env.filters['t'] = translate
 
 # Типы обращений: один экран заявки, три сценария
 REQUEST_KINDS = {
@@ -183,6 +188,15 @@ def pet_age_filter(birth_date):
         return None
 
     years, rest_months = divmod(months, 12)
+    if get_locale() == 'zh':
+        return (f'{years}岁' if years else '') + (f'{rest_months}个月' if rest_months else '') or '不足一个月'
+    if get_locale() == 'en':
+        parts = []
+        if years:
+            parts.append(f'{years} year' + ('s' if years != 1 else ''))
+        if rest_months:
+            parts.append(f'{rest_months} month' + ('s' if rest_months != 1 else ''))
+        return ' '.join(parts) or 'less than a month'
     parts = []
     if years:
         parts.append(f'{years} {_plural(years, "год", "года", "лет")}')
@@ -197,10 +211,30 @@ def inject_globals():
         'request_kinds': REQUEST_KINDS,
         'request_status_labels': REQUEST_STATUS_LABELS,
         'service_labels': SERVICE_LABELS,
+        '_': translate,
+        'locale': get_locale(),
+        'languages': LANGUAGES,
     }
 
 
 # --- Маршруты ---
+
+@app.route('/language', methods=['POST'])
+def set_language():
+    language = request.form.get('language')
+    if language not in LANGUAGES:
+        abort(400)
+    session['language'] = language
+    session.permanent = True
+    # Never redirect to external URLs, including protocol-relative URLs.
+    target = request.form.get('next', '/')
+    parsed = urlsplit(target)
+    if (not target.startswith('/') or target.startswith('//')
+            or parsed.netloc or parsed.scheme or chr(92) in target
+            or any(ord(char) < 32 for char in target)):
+        target = url_for('index')
+    return redirect(target)
+
 
 @app.route('/')
 def index():
@@ -315,7 +349,7 @@ def dashboard():
                     pet.birth_date = birth_date
                     pet.vaccinations = vaccinations
                     db.session.commit()
-                    flash(f'Карточка «{pet.pet_name}» обновлена.', 'success')
+                    flash(translate('Карточка «{name}» обновлена.', name=pet.pet_name), 'success')
             else:
                 # Добавление нового питомца
                 new_pet = PetPassport(
@@ -328,7 +362,7 @@ def dashboard():
                 )
                 db.session.add(new_pet)
                 db.session.commit()
-                flash(f'«{new_pet.pet_name}» добавлен в ветпаспорт.', 'success')
+                flash(translate('«{name}» добавлен в ветпаспорт.', name=new_pet.pet_name), 'success')
         else:
             flash('Укажите имя питомца и вид животного.', 'error')
 
@@ -357,7 +391,7 @@ def delete_pet(pet_id):
     if pet:
         db.session.delete(pet)
         db.session.commit()
-        flash(f'Карточка «{pet.pet_name}» удалена.', 'success')
+        flash(translate('Карточка «{name}» удалена.', name=pet.pet_name), 'success')
     return redirect(url_for('dashboard'))
 
 
@@ -457,20 +491,20 @@ def request_submit():
     if kind == 'care':
         if current_user.is_authenticated:
             flash(
-                f'Заявка отправлена: {new_request.sitter_name}. Консьерж подтвердит даты и свяжется с вами на {email}.',
+                translate('Заявка отправлена: {sitter}. Консьерж подтвердит даты и свяжется с вами на {email}.', sitter=translate(new_request.sitter_name), email=email),
                 'success',
             )
             return redirect(url_for('dashboard'))
         flash(
-            f'Заявка отправлена: {new_request.sitter_name}. Консьерж уточнит данные питомца и свяжется с вами на {email}.',
+            translate('Заявка отправлена: {sitter}. Консьерж уточнит данные питомца и свяжется с вами на {email}.', sitter=translate(new_request.sitter_name), email=email),
             'success',
         )
         return redirect(url_for('index'))
 
     if kind == 'sitter':
-        flash(f'Спасибо, {name}! Заявка специалиста принята — куратор ответит на {email}.', 'success')
+        flash(translate('Спасибо, {name}! Заявка специалиста принята — куратор ответит на {email}.', name=name, email=email), 'success')
     else:
-        flash(f'{name}, заявка принята. Консьерж ответит на {email} в течение рабочего дня.', 'success')
+        flash(translate('{name}, заявка принята. Консьерж ответит на {email} в течение рабочего дня.', name=name, email=email), 'success')
 
     return redirect(url_for('index'))
 

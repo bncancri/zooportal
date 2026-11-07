@@ -38,6 +38,13 @@
         <button type="submit" class="btn btn-block">Зарегистрироваться</button>
       </form>
 
+      {% if confirmation_pending %}
+        <p class="form-hint">
+          <a href="{{ url_for('confirm_email') }}">Открыть экран подтверждения</a> — аккаунт уже создан,
+          осталось перейти по ссылке из письма.
+        </p>
+      {% endif %}
+
       <p class="auth-switch">Уже есть аккаунт? <a href="{{ url_for('login') }}">Войти</a></p>
     </div>
   </div>

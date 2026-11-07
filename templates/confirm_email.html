@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Подтверждение email — Зоопортал{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+  <div class="container">
+    <div class="auth-card">
+      <div class="section-eyebrow">
+        <svg width="16" height="16" viewBox="0 0 24 24" class="line-icon">
+          <rect x="3" y="5" width="18" height="14" rx="2"/>
+          <polyline points="3,7 12,13 21,7"/>
+        </svg>
+        Подтверждение адреса
+      </div>
+      <h1>Подтвердите email</h1>
+      <p class="auth-lead">
+        {% if email %}
+          Мы отправили письмо на <strong>{{ email }}</strong>. Перейдите по ссылке внутри —
+          до подтверждения вход в личный кабинет закрыт.
+        {% else %}
+          Введите email, который указывали при регистрации, и мы отправим письмо
+          с ссылкой для подтверждения. До подтверждения вход в кабинет закрыт.
+        {% endif %}
+      </p>
+
+      <div class="contact-details">
+        <div class="detail-item">
+          <span>Срок действия ссылки</span>
+          <strong>24 часа</strong>
+        </div>
+        <div class="detail-item">
+          <span>Повторное письмо</span>
+          <strong>Не чаще раза в минуту</strong>
+        </div>
+      </div>
+
+      {% if dev_link %}
+        <p class="form-hint">
+          Режим разработки: SMTP не настроен, письмо не отправляется, а ссылка
+          написана в логе сервера. Для проверки сценария можно открыть её прямо здесь:
+          <a href="{{ dev_link }}">{{ dev_link }}</a>
+        </p>
+        <div class="filter-group">
+          <a href="{{ dev_link }}" class="btn">Подтвердить email</a>
+        </div>
+      {% endif %}
+
+      <form method="POST" action="{{ url_for('resend_confirmation') }}" class="auth-form">
+        <div class="field-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" class="input-control"
+                 placeholder="you@example.com" value="{{ email or '' }}" required>
+        </div>
+        <button type="submit" class="btn btn-block btn-outline">Отправить письмо повторно</button>
+      </form>
+
+      <p class="auth-switch">Уже подтвердили адрес? <a href="{{ url_for('login') }}">Войти</a></p>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -35,6 +35,12 @@
         <button type="submit" class="btn btn-block">Войти</button>
       </form>
 
+      {% if needs_confirmation %}
+        <p class="form-hint">
+          Не пришло письмо? <a href="{{ url_for('confirm_email') }}">Отправить ссылку повторно</a>.
+        </p>
+      {% endif %}
+
       <p class="auth-switch">Нет аккаунта? <a href="{{ url_for('register') }}">Создать аккаунт</a></p>
     </div>
   </div>

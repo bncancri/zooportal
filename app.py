@@ -1,23 +1,63 @@
-from datetime import date, datetime
+import logging
+import os
+import re
+import smtplib
+import ssl
+from datetime import date, datetime, timedelta
+from email.message import EmailMessage
 
 from flask import (
-    Flask, render_template, request, redirect, url_for, flash, abort
+    Flask, render_template, request, redirect, url_for, flash, abort, session
 )
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import (
     LoginManager, UserMixin, login_user,
     login_required, logout_user, current_user
 )
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+from sqlalchemy import inspect, text
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from sitters import SITTERS, SERVICE_LABELS, get_sitter
 
 app = Flask(__name__)
 
-# Секретный ключ необходим для работы сессий Flask-Login
-app.config['SECRET_KEY'] = 'maison-patte-dev-secret-key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///maison_patte.db'
+# Секретный ключ нужен для сессий Flask-Login и подписи ссылок подтверждения.
+# В продакшене обязательно задайте SECRET_KEY через переменную окружения.
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'maison-patte-dev-secret-key'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or 'sqlite:///maison_patte.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# --- Почта и подтверждение email ---
+SMTP_HOST = os.environ.get('SMTP_HOST', '').strip()
+try:
+    SMTP_PORT = int(os.environ.get('SMTP_PORT', '587'))
+except ValueError:
+    SMTP_PORT = 587
+SMTP_USER = os.environ.get('SMTP_USER')
+SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD')
+SMTP_FROM = os.environ.get('SMTP_FROM') or SMTP_USER or 'no-reply@zooportal.ru'
+SMTP_SECURITY = os.environ.get('SMTP_SECURITY', 'starttls').lower()  # starttls | ssl | none
+SMTP_TIMEOUT = 10
+# Публический адрес сайта за обратным прокси: если задан, письмо содержит ссылку на нём,
+# а не на внутреннем хосте, который видит Flask.
+APP_BASE_URL = os.environ.get('APP_BASE_URL', '').rstrip('/')
+
+# Без SMTP письмо не уходит: ссылка пишется в лог и показывается на /confirm-email.
+# Это dev-режим — в нём можно проверить весь сценарий без почтового сервера.
+EMAIL_DEV_MODE = (
+    not SMTP_HOST
+    or os.environ.get('EMAIL_DEV_MODE', '').lower() in ('1', 'true', 'yes')
+)
+CONFIRM_TOKEN_MAX_AGE = 24 * 60 * 60  # ссылка живёт сутки
+CONFIRM_RESEND_COOLDOWN = timedelta(seconds=60)  # не даём спамить повторными письмами
+
+if EMAIL_DEV_MODE:
+    app.logger.setLevel(logging.INFO)
+
+confirm_serializer = URLSafeTimedSerializer(
+    app.config['SECRET_KEY'], salt='zooportal-email-confirm-v1'
+)
 
 db = SQLAlchemy(app)
 
@@ -62,6 +102,12 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
+    # Пока email не подтверждён, вход в кабинет закрыт (жёсткая политика).
+    email_confirmed = db.Column(
+        db.Boolean, nullable=False, default=False, server_default='0'
+    )
+    email_confirmed_at = db.Column(db.DateTime)
+    email_confirm_sent_at = db.Column(db.DateTime)
     pets = db.relationship('PetPassport', backref='owner', lazy=True)
 
 
@@ -104,11 +150,43 @@ class Request(db.Model):
 
 @login_manager.user_loader
 def load_user(user_id):
-    return db.session.get(User, int(user_id))
+    # Единая точка жёсткой проверки: неподтверждённый аккаунт не считается
+    # авторизованным, даже если в сессии остался старый cookie.
+    user = db.session.get(User, int(user_id))
+    if user is None or not user.email_confirmed:
+        return None
+    return user
+
+
+def _ensure_email_confirmation_columns():
+    """Лёгкая миграция: db.create_all() не добавляет колонки в существующую таблицу.
+
+    Аккаунты, созданные до появления подтверждения, считаем уже подтверждёнными,
+    иначе после обновления все существующие пользователи потеряли бы доступ.
+    """
+    if 'user' not in inspect(db.engine).get_table_names():
+        return
+
+    columns = {column['name'] for column in inspect(db.engine).get_columns('user')}
+    with db.engine.begin() as connection:
+        if 'email_confirmed' not in columns:
+            connection.execute(text(
+                'ALTER TABLE "user" ADD COLUMN email_confirmed BOOLEAN NOT NULL DEFAULT 0'
+            ))
+            connection.execute(text('UPDATE "user" SET email_confirmed = 1'))
+        if 'email_confirmed_at' not in columns:
+            connection.execute(text(
+                'ALTER TABLE "user" ADD COLUMN email_confirmed_at DATETIME'
+            ))
+        if 'email_confirm_sent_at' not in columns:
+            connection.execute(text(
+                'ALTER TABLE "user" ADD COLUMN email_confirm_sent_at DATETIME'
+            ))
 
 
 with app.app_context():
     db.create_all()
+    _ensure_email_confirmation_columns()
 
 
 # --- Вспомогательные функции ---
@@ -124,11 +202,108 @@ def _plural(count, one, few, many):
     return many
 
 
+_EMAIL_LOCAL_RE = re.compile(
+    r"[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*"
+)
+_EMAIL_LABEL_RE = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?")
+
+
 def _is_valid_email(value):
-    if not value or '@' not in value:
+    """Проверка формата адреса: теперь по нему реально отправляется письмо.
+
+    ASCII-адреса (включая punycode-домены вроде xn--...): пробелы, несколько @,
+    двойные точки, пустые метки домена и односимвольные TLD не пропускаем.
+    """
+    if not isinstance(value, str) or len(value) > 254 or value != value.strip():
         return False
-    local, _, domain = value.rpartition('@')
-    return bool(local) and '.' in domain and not domain.startswith('.') and not domain.endswith('.')
+
+    local, separator, domain = value.rpartition('@')
+    if not separator or not local or len(local) > 64:
+        return False
+    if not _EMAIL_LOCAL_RE.fullmatch(local):
+        return False
+
+    labels = domain.split('.')
+    if len(labels) < 2 or len(labels[-1]) < 2:
+        return False
+    return all(_EMAIL_LABEL_RE.fullmatch(label) for label in labels)
+
+
+def _resend_wait(user):
+    """Сколько секунд ещё нельзя отправлять письмо повторно (0 — можно)."""
+    if not user.email_confirm_sent_at:
+        return 0
+    remaining = CONFIRM_RESEND_COOLDOWN - (datetime.utcnow() - user.email_confirm_sent_at)
+    return max(0, int(remaining.total_seconds()) + 1)
+
+
+def _confirmation_links(user):
+    """Подписанная ссылка с ограниченным сроком жизни; токен в БД не хранится.
+
+    Возвращает пару: абсолютную (для письма и лога) и относительную (для dev-экрана).
+    Относительная не зависит от Host/X-Forwarded-Proto, поэтому работает и в preview.
+    """
+    token = confirm_serializer.dumps({'uid': user.id, 'email': user.email})
+    path = url_for('confirm_email_token', token=token)
+    absolute = f'{APP_BASE_URL}{path}' if APP_BASE_URL else url_for(
+        'confirm_email_token', token=token, _external=True
+    )
+    return absolute, path
+
+
+def _send_confirmation_email(user, link):
+    """Отправляет письмо через SMTP. В dev-режиме только пишет ссылку в лог."""
+    if EMAIL_DEV_MODE:
+        app.logger.info('[DEV] Подтверждение email для %s: %s', user.email, link)
+        return True
+
+    message = EmailMessage()
+    message['Subject'] = 'Подтвердите email — Зоопортал'
+    message['From'] = SMTP_FROM
+    message['To'] = user.email
+    message.set_content(
+        'Здравствуйте!\n\n'
+        'Вы зарегистрировались на Зоопортале. Чтобы подтвердить адрес и получить '
+        'доступ к личному кабинету, перейдите по ссылке:\n\n'
+        f'{link}\n\n'
+        'Ссылка действует 24 часа. Если вы не регистрировались, просто '
+        'проигнорируйте это письмо — аккаунт останется неподтверждённым.\n\n'
+        'Зоопортал · hello@zooportal.ru'
+    )
+
+    try:
+        if SMTP_SECURITY == 'ssl':
+            smtp = smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=SMTP_TIMEOUT)
+        else:
+            smtp = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=SMTP_TIMEOUT)
+            if SMTP_SECURITY == 'starttls':
+                smtp.starttls(context=ssl.create_default_context())
+        with smtp:
+            if SMTP_USER and SMTP_PASSWORD:
+                smtp.login(SMTP_USER, SMTP_PASSWORD)
+            smtp.send_message(message)
+    except (smtplib.SMTPException, OSError) as exc:
+        app.logger.exception('Не удалось отправить письмо на %s: %s', user.email, exc)
+        return False
+    return True
+
+
+def _issue_confirmation(user):
+    """Готовит письмо, запоминает адрес в сессии; возвращает ссылку или None при ошибке."""
+    session['pending_confirm_email'] = user.email
+    session.pop('confirm_dev_link', None)
+
+    absolute_link, dev_path = _confirmation_links(user)
+    if not _send_confirmation_email(user, absolute_link):
+        return None
+
+    user.email_confirm_sent_at = datetime.utcnow()
+    db.session.commit()
+    if EMAIL_DEV_MODE:
+        # Только в dev-режиме: показать ссылку на экране /confirm-email.
+        # Относительный путь переживает любой прокси и не уводит с https на http.
+        session['confirm_dev_link'] = dev_path
+    return absolute_link
 
 
 def _user_pets():
@@ -221,6 +396,7 @@ def register():
         return redirect(url_for('dashboard'))
 
     error = None
+    confirmation_pending = False
     if request.method == 'POST':
         email = (request.form.get('email') or '').strip().lower()
         password = request.form.get('password') or ''
@@ -234,23 +410,106 @@ def register():
             error = 'Пароли не совпадают.'
         elif len(password) < 8:
             error = 'Пароль должен содержать не менее 8 символов.'
-        elif User.query.filter_by(email=email).first():
-            error = 'Пользователь с таким email уже существует.'
         else:
-            new_user = User(email=email, password_hash=generate_password_hash(password))
-            db.session.add(new_user)
-            db.session.commit()
+            user = User.query.filter_by(email=email).first()
+            if user and user.email_confirmed:
+                error = 'Пользователь с таким email уже существует.'
+            else:
+                # Повторная регистрация с ещё неподтверждённым адресом: обновляем
+                # пароль и шлём новое письмо, чтобы чужой адрес не «залип» за аккаунтом.
+                wait = _resend_wait(user) if user else 0
+                if wait:
+                    error = f'Письмо с подтверждением уже отправлено. Повторите через {wait} сек.'
+                    confirmation_pending = True
+                else:
+                    password_hash = generate_password_hash(password)
+                    if user:
+                        user.password_hash = password_hash
+                    else:
+                        user = User(email=email, password_hash=password_hash)
+                        db.session.add(user)
+                        db.session.flush()  # нужен id для подписанной ссылки
 
-            # Заявки, отправленные гостем с этим email, привязываем к новому аккаунту
-            Request.query.filter_by(email=email, user_id=None).update({'user_id': new_user.id})
-            db.session.commit()
+                    # Заявки, отправленные гостем с этим email, привязываем к аккаунту
+                    Request.query.filter_by(email=email, user_id=None).update({'user_id': user.id})
+                    db.session.commit()
 
-            # Автоматический вход после регистрации
-            login_user(new_user)
-            flash('Аккаунт создан. Добавьте первого питомца в ветпаспорт.', 'success')
-            return redirect(url_for('dashboard'))
+                    if _issue_confirmation(user) is None:
+                        confirmation_pending = True
+                        error = 'Не удалось отправить письмо. Попробуйте запросить его повторно.'
+                    else:
+                        flash(
+                            'Аккаунт создан. Подтвердите email по ссылке из письма — '
+                            'до этого вход в кабинет закрыт.',
+                            'success',
+                        )
+                        return redirect(url_for('confirm_email'))
 
-    return render_template('register.html', error=error)
+    return render_template(
+        'register.html', error=error, confirmation_pending=confirmation_pending
+    )
+
+
+@app.route('/confirm-email', methods=['GET'])
+def confirm_email():
+    """Экран «подтвердите email»: повторная отправка письма и dev-ссылка."""
+    return render_template(
+        'confirm_email.html',
+        email=session.get('pending_confirm_email'),
+        dev_link=session.get('confirm_dev_link'),
+    )
+
+
+@app.route('/confirm-email/resend', methods=['POST'])
+def resend_confirmation():
+    email = (request.form.get('email') or session.get('pending_confirm_email') or '').strip().lower()
+    user = User.query.filter_by(email=email).first() if email else None
+
+    if not user:
+        flash('Аккаунт с таким email не найден. Зарегистрируйтесь.', 'error')
+        return redirect(url_for('register'))
+    if user.email_confirmed:
+        flash('Email уже подтверждён — можно войти в кабинет.', 'success')
+        return redirect(url_for('login'))
+
+    wait = _resend_wait(user)
+    if wait:
+        flash(f'Письмо уже отправлено. Повторите через {wait} сек.', 'error')
+        return redirect(url_for('confirm_email'))
+    if _issue_confirmation(user) is None:
+        flash('Не удалось отправить письмо. Попробуйте позже.', 'error')
+    else:
+        flash('Письмо отправлено повторно. Проверьте входящие и папку «Спам».', 'success')
+    return redirect(url_for('confirm_email'))
+
+
+@app.route('/confirm-email/<token>')
+def confirm_email_token(token):
+    """Подтверждает адрес по подписанной ссылке из письма."""
+    try:
+        data = confirm_serializer.loads(token, max_age=CONFIRM_TOKEN_MAX_AGE)
+        uid = int(data.get('uid'))
+    except SignatureExpired:
+        flash('Срок действия ссылки истёк. Запросите новое письмо.', 'error')
+        return redirect(url_for('confirm_email'))
+    except (BadSignature, TypeError, ValueError, AttributeError):
+        flash('Ссылка подтверждения недействительна. Запросите новое письмо.', 'error')
+        return redirect(url_for('confirm_email'))
+
+    user = db.session.get(User, uid)
+    if not user or user.email != data.get('email'):
+        flash('Ссылка подтверждения недействительна. Запросите новое письмо.', 'error')
+        return redirect(url_for('confirm_email'))
+
+    if not user.email_confirmed:
+        user.email_confirmed = True
+        user.email_confirmed_at = datetime.utcnow()
+        db.session.commit()
+
+    session.pop('pending_confirm_email', None)
+    session.pop('confirm_dev_link', None)
+    flash('Email подтверждён. Теперь можно войти в личный кабинет.', 'success')
+    return redirect(url_for('login'))
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -264,19 +523,30 @@ def login():
         next_page = ''
 
     error = None
+    needs_confirmation = False
     if request.method == 'POST':
         email = (request.form.get('email') or '').strip().lower()
         password = request.form.get('password') or ''
 
         user = User.query.filter_by(email=email).first()
         if user and check_password_hash(user.password_hash, password):
-            login_user(user)
-            flash('Вы вошли в личный кабинет.', 'success')
-            return redirect(next_page or url_for('dashboard'))
+            if not user.email_confirmed:
+                session['pending_confirm_email'] = user.email
+                needs_confirmation = True
+                error = 'Email ещё не подтверждён. Откройте письмо и перейдите по ссылке.'
+            else:
+                login_user(user)
+                flash('Вы вошли в личный кабинет.', 'success')
+                return redirect(next_page or url_for('dashboard'))
+        else:
+            error = 'Неверный email или пароль.'
 
-        error = 'Неверный email или пароль.'
-
-    return render_template('login.html', error=error, next_page=next_page)
+    return render_template(
+        'login.html',
+        error=error,
+        next_page=next_page,
+        needs_confirmation=needs_confirmation,
+    )
 
 
 @app.route('/logout')

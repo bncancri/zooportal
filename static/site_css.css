@@ -648,6 +648,12 @@ textarea.input-control {
   padding: 36px;
   display: grid;
   gap: 18px;
+  /* Длинные адреса и токены не должны распирать узкую карточку */
+  overflow-wrap: anywhere;
+}
+
+.auth-card > * {
+  min-width: 0;
 }
 
 .auth-card h1 {
@@ -743,6 +749,7 @@ textarea.input-control {
 .form-hint {
   font-size: 0.875rem;
   color: var(--text-muted);
+  overflow-wrap: anywhere;
 }
 
 .form-hint a,

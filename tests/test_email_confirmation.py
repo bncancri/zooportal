@@ -224,6 +224,18 @@ def test_legacy_users_are_grandfathered_by_migration():
         assert newcomer.email_confirmed is False
 
 
+def test_confirm_page_does_not_print_raw_token(client):
+    """Сырой токен не должен быть видимым текстом: он распирает .auth-card."""
+    register(client)
+    path = dev_link(client)
+    page = client.get('/confirm-email').get_data(as_text=True)
+
+    assert f'>{path}</a>' not in page  # длинная строка не выводится на экран
+    assert f'href="{path}"' in page     # но остаётся в href ссылки и кнопки
+    assert 'ссылку подтверждения' in page
+    assert 'Режим разработки' in page
+
+
 def test_dev_link_is_relative_and_base_url_is_used_in_mail(client, monkeypatch):
     sent_links = []
     monkeypatch.setattr(app_module, 'APP_BASE_URL', 'https://zooportal.example')

@@ -129,7 +129,7 @@
           <input type="text" id="pet_info" name="pet_info" class="input-control" placeholder="Например, Барнаби, уиппет, 9 лет" {% if not (current_user.is_authenticated and pets) %}required {% endif %}value="{{ form.get('pet_info', '') }}">
           <p class="form-hint">
             {% if current_user.is_authenticated %}
-              Без выбранного ветпаспорта это описание обязательно. Если выберете карточку ниже, к заявке приложится её снимок.
+              Поле обязательно, если ветпаспорт не выбран. Данные карточки (порода, возраст, вакцинация) добавятся к заявке автоматически — отдельно ничего прикреплять не нужно.
             {% else %}
               <a href="{{ url_for('login', next=request.path + ('?' + request.query_string.decode() if request.query_string else '')) }}">Войдите в аккаунт</a>, чтобы приложить ветпаспорт. Без аккаунта достаточно этого описания.
             {% endif %}
@@ -158,7 +158,7 @@
         <div class="field-group">
           <label for="pet_info">Питомец: имя, порода и возраст</label>
           <input type="text" id="pet_info" name="pet_info" class="input-control" placeholder="Например, Барнаби, уиппет, 9 лет" value="{{ form.get('pet_info', '') }}">
-          <p class="form-hint">Можно описать питомца текстом, приложить ветпаспорт из кабинета или и то, и другое.</p>
+          <p class="form-hint">Опишите питомца текстом или приложите ветпаспорт из кабинета — имя, порода, возраст и отметка о вакцинации добавятся к заявке автоматически, отдельно ничего прикреплять не нужно.</p>
         </div>
 
         {% if current_user.is_authenticated and pets %}

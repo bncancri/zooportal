@@ -331,6 +331,7 @@
       <div class="field-group">
         <label for="pet_info">Имя, порода и возраст питомца</label>
         <input type="text" id="pet_info" name="pet_info" class="input-control" placeholder="Например, Барнаби, уиппет, 9 лет" value="{{ form.get('pet_info', '') }}" />
+        <p class="form-hint">Опишите питомца текстом или приложите ветпаспорт из кабинета — имя, порода, возраст и отметка о вакцинации добавятся к заявке автоматически, отдельно ничего прикреплять не нужно.</p>
       </div>
 
       {% if current_user.is_authenticated and pets %}
